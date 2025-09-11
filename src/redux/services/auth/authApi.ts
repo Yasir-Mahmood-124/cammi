@@ -1,3 +1,4 @@
+//redux/services/auth/authApi.ts
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const BASE_URL = "https://o3uzr46ro5.execute-api.us-east-1.amazonaws.com/cammi-dev";

@@ -1,27 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { ReactNode } from "react";
 import { Button } from "@mui/material";
 
 interface GradientButtonProps {
-  text: string;
+  text: ReactNode; // <-- now accepts string or JSX
   onClick?: () => void;
   width?: string | number;
   fontSize?: string | number;
   size?: "small" | "medium" | "large";
+  disabled?: boolean;
 }
 
 const GradientButton: React.FC<GradientButtonProps> = ({
   text,
   onClick,
-  width = "80%", // default width
-  fontSize = "1rem", // default font size
+  width = "80%",
+  fontSize = "1rem",
   size = "medium",
+  disabled = false,
 }) => {
   return (
     <Button
       onClick={onClick}
       size={size}
+      disabled={disabled}
       sx={{
         mt: 3,
         py: 1,
