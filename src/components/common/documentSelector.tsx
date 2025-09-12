@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Box, Typography, Button, Stack, Paper } from "@mui/material";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined"; // ✅ better outlined icon
 import PanelImg from "@/assests/images/Panel.png"; // ✅ panel image
 
 interface DocumentSelectorProps {
@@ -24,21 +24,20 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({ onSelect }) => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#f5f7fa", // ✅ simple light background (page)
-        
+        backgroundColor: "#f5f7fa",
       }}
     >
       <Paper
         elevation={0}
         sx={{
           width: "100%",
-          maxWidth: 420, // ✅ same as before
+          maxWidth: 450,
           padding: "100px",
           paddingX: 5,
           borderRadius: "20px",
           textAlign: "center",
-          backgroundImage: `url(${PanelImg.src})`, // ✅ panel as background
-          backgroundSize: "contain", // ✅ fit inside card
+          backgroundImage: `url(${PanelImg.src})`,
+          backgroundSize: "contain",
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
           backgroundColor: "transparent",
@@ -50,11 +49,11 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({ onSelect }) => {
           gutterBottom
           sx={{ fontSize: "1.25rem", fontWeight: 700, color: "#000" }}
         >
-          Do you have a strategic document <br /> for this project?
+          Do you have a GTM <br /> document  ?
         </Typography>
 
-        {/* Icon */}
-        <InsertDriveFileIcon
+        {/* Outlined Icon */}
+        <DescriptionOutlinedIcon
           sx={{ fontSize: 60, color: "#000000", my: 2 }}
         />
 
@@ -111,13 +110,6 @@ const DocumentSelector: React.FC<DocumentSelectorProps> = ({ onSelect }) => {
             Yes
           </Button>
         </Stack>
-
-        {/* Show selected option */}
-        {selection && (
-          <Typography variant="body2" sx={{ mt: 3, fontWeight: "bold" }}>
-            You selected: {selection.toUpperCase()}
-          </Typography>
-        )}
       </Paper>
     </Box>
   );

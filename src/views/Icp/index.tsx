@@ -1,24 +1,39 @@
 "use client";
 
-import React from "react";
-import GradientCard from "@/components/common/GradientCard";
+import React, { useState } from "react";
 import DocumentSelector from "@/components/common/documentSelector";
+import UploadDocument from "@/components/common/UploadDocument";
 
 const Icp = () => {
+  const [selection, setSelection] = useState<"yes" | "no" | null>(null);
+
   const handleSelection = (value: "yes" | "no") => {
+    setSelection(value);
     console.log("User selected:", value);
-    // 👉 you can add navigation or conditional rendering here
   };
 
   return (
     <>
-      {/* <GradientCard
-        heading="ICP Document Generation"
-        content="A comprehensive framework capturing all key elements requiered to execute a successfull go-to-market plan."
-      /> */}
+      {selection === null && (
+        <DocumentSelector onSelect={handleSelection} />
+      )}
 
-      {/* Document Selector Component */}
-      <DocumentSelector onSelect={handleSelection} />
+      {selection === "yes" && <UploadDocument />}
+
+      {selection === "no" && (
+        <div
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            fontSize: "1.2rem",
+            fontWeight: "500",
+          }}
+        >
+          You selected <strong>No</strong>.
+        </div>
+      )}
     </>
   );
 };
