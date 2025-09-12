@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 
 import BackgroundImg from "@/assests/images/background.png";
 import PanelImg from "@/assests/images/Panel.png";
-import GradientButton from "@/components/GradientButton";
-import CustomSnackbar from "@/components/CustomSnackbar";
+import GradientButton from "@/components/common/GradientButton";
+import CustomSnackbar from "@/components/common/CustomSnackbar";
 
 import { useForgotPasswordMutation, useResetPasswordMutation } from "@/redux/services/auth/authApi";
 

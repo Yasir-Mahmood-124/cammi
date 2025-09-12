@@ -11,8 +11,8 @@ import BackgroundImg from "@/assests/images/background.png";
 import LogoImg from "@/assests/images/Logo.png";
 import UnderlineImg from "@/assests/images/Underline.png";
 import PanelImg from "@/assests/images/Panel.png";
-import GradientButton from "@/components/GradientButton";
-import CustomSnackbar from "@/components/CustomSnackbar";
+import GradientButton from "@/components/common/GradientButton";
+import CustomSnackbar from "@/components/common/CustomSnackbar";
 import { useLoginMutation } from "@/redux/services/auth/authApi";
 
 const Login = () => {

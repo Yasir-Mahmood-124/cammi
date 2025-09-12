@@ -10,11 +10,11 @@ import BackgroundImg from "@/assests/images/background.png";
 import LogoImg from "@/assests/images/Logo.png";
 import UnderlineImg from "@/assests/images/Underline.png";
 import PanelImg from "@/assests/images/Panel.png";
-import GradientButton from "@/components/GradientButton";
+import GradientButton from "@/components/common/GradientButton";
 import VerifyEmail from "@/components/VerifyEmail";
 
 import { useRegisterMutation } from "@/redux/services/auth/authApi";
-import CustomSnackbar from "@/components/CustomSnackbar";
+import CustomSnackbar from "@/components/common/CustomSnackbar";
 
 const Register = () => {
   const router = useRouter();

@@ -9,8 +9,8 @@ import { useRouter } from "next/navigation";
 import BackgroundImg from "@/assests/images/background.png";
 import VerifyEmailBg from "@/assests/images/verifyEmailBg.png";
 import LogoImg from "@/assests/images/Logo.png";
-import GradientButton from "@/components/GradientButton";
-import CustomSnackbar from "@/components/CustomSnackbar";
+import GradientButton from "@/components/common/GradientButton";
+import CustomSnackbar from "@/components/common/CustomSnackbar";
 
 import { useVerifyEmailMutation } from "@/redux/services/auth/authApi";
 

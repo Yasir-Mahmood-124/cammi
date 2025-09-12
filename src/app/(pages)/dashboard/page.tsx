@@ -1,8 +1,11 @@
 import React from 'react'
+import Icp from '@/views/Icp'
 
 const DashboardPage = () => {
   return (
-    <div>DashboardPage</div>
+    <div>
+        <Icp/>
+    </div>
   )
 }
 
