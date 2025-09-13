@@ -25,18 +25,19 @@ import {
   setSubmenuClicked,
   loadSubmenuFromStorage,
 } from "@/redux/services/features/submenuSlice";
-
-//Pages
+ 
 import Gtm from "@/views/Gtm";
 import Icp from "@/views/Icp";
  
-// Individual sub-pages
 const GeneralStragicDocument = ({ onBack }: { onBack: () => void }) => (
   <Box sx={{ p: 4 }}>
+    <Button variant="outlined" onClick={onBack} sx={{ mb: 2 }}>
+      ← Back to Dashboard
+    </Button>
     <Gtm />
   </Box>
 );
-
+ 
 const IdealCustomerProfile = ({ onBack }: { onBack: () => void }) => (
   <Box sx={{ p: 4 }}>
     <Icp />
@@ -51,7 +52,7 @@ const StrategicRoadmap = ({ onBack }: { onBack: () => void }) => (
  
 const MessagingFramework = ({ onBack }: { onBack: () => void }) => (
   <Box sx={{ p: 4 }}>
-    <Typography variant="h4">Messaging Framework</Typography>
+    <Typography variant="h4">Messaging Framework from Welcome</Typography>
   </Box>
 );
  
@@ -71,7 +72,6 @@ const DashboardWelcome: React.FC = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
  
-  // 🔹 Global submenu state
   const submenuClicked = useSelector(
     (state: RootState) => state.submenu.clicked
   );
@@ -82,7 +82,6 @@ const DashboardWelcome: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [openCreateProject, setOpenCreateProject] = useState(false);
  
-  // Load submenu state on mount
   useEffect(() => {
     dispatch(loadSubmenuFromStorage());
   }, [dispatch]);
@@ -91,32 +90,29 @@ const DashboardWelcome: React.FC = () => {
     {
       label: "Clarify",
       key: "clarity",
-      children: [{ key: "gtm", label: "GTM Document" },
+      children: [
+        { key: "gtm", label: "GTM Document" },
         { key: "icp", label: "Ideal Customer Profile" },
         { key: "kmf", label: "Key Messaging Framework" },
         { key: "sr", label: "Strategic Roadmap" },
-        { key: "bs", label: "Business Strategy" }
+        { key: "bs", label: "Business Strategy" },
       ],
     },
     {
       label: "Align",
       key: "align",
-      // children: [{ key: "sr", label: "Strategic Roadmap" }],
     },
     {
       label: "Mobilize",
       key: "mobilize",
-      // children: [{ key: "kmf", label: "Messaging Framework" }],
     },
     {
       label: "Monitor",
       key: "monitor",
-      // children: [{ key: "bi", label: "Brand Identity" }],
     },
     {
       label: "Iterate",
       key: "iterate",
-      // children: [{ key: "budget", label: "Budget" }],
     },
   ];
  
@@ -133,7 +129,6 @@ const DashboardWelcome: React.FC = () => {
     setAnchorEls((prev) => ({ ...prev, [key]: null }));
   };
  
-  // Map submenuClicked → actual component
   const renderActiveComponent = () => {
     switch (submenuClicked) {
       case "gtm":
@@ -144,7 +139,9 @@ const DashboardWelcome: React.FC = () => {
         );
       case "icp":
         return (
-          <IdealCustomerProfile onBack={() => dispatch(setSubmenuClicked(null))} />
+          <IdealCustomerProfile
+            onBack={() => dispatch(setSubmenuClicked(null))}
+          />
         );
       case "kmf":
         return (
@@ -163,7 +160,6 @@ const DashboardWelcome: React.FC = () => {
     }
   };
  
-  // If submenuClicked → show full screen component
   if (submenuClicked) {
     return (
       <Box sx={{ width: "100%", height: "100vh", bgcolor: "#fff" }}>
@@ -172,11 +168,9 @@ const DashboardWelcome: React.FC = () => {
     );
   }
  
-  // Otherwise show dashboard
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box width="100%" sx={{ px: 5 }}>
-        {/* 🔍 Search Bar */}
         <Box sx={{ px: 1, mb: 2 }}>
           <TextField
             fullWidth
@@ -202,7 +196,6 @@ const DashboardWelcome: React.FC = () => {
           />
         </Box>
  
-        {/* Welcome Card */}
         <Paper
           elevation={0}
           sx={{
@@ -257,7 +250,6 @@ const DashboardWelcome: React.FC = () => {
           </Box>
         </Paper>
  
-        {/* Categories */}
         <Box
           mt={4}
           display="flex"
@@ -278,7 +270,7 @@ const DashboardWelcome: React.FC = () => {
                   color: "black",
                   fontSize: "1rem",
                   fontWeight: "bold",
-                  px: 1,
+                  px: 0.5,
                   py: 1,
                   boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
                   display: "flex",
@@ -311,7 +303,6 @@ const DashboardWelcome: React.FC = () => {
                 </Avatar>
                 {category.label}
               </Button>
- 
               <Menu
                 anchorEl={anchorEls[category.key]}
                 open={Boolean(anchorEls[category.key])}
@@ -325,12 +316,12 @@ const DashboardWelcome: React.FC = () => {
                   },
                 }}
               >
-                {category.children &&
+                {category.children && category.children.length > 0 ? (
                   category.children.map((child) => (
                     <MenuItem
                       key={child.key}
                       onClick={() => {
-                        dispatch(setSubmenuClicked(child.key)); // 🔹 Save to global state
+                        dispatch(setSubmenuClicked(child.key));
                         handleClose(category.key);
                       }}
                       sx={{
@@ -343,14 +334,27 @@ const DashboardWelcome: React.FC = () => {
                     >
                       {child.label}
                     </MenuItem>
-                  ))}
+                  ))
+                ) : (
+                  <MenuItem
+                    disabled
+                    sx={{
+                      fontStyle: "italic",
+                      color: "#ffff",
+                      borderRadius: "12px",
+                      background:
+                        "linear-gradient(90deg, #EF4681 0%, #4F8CCA 100%)",
+                    }}
+                  >
+                    Coming Soon 🚧
+                  </MenuItem>
+                )}
               </Menu>
             </Box>
           ))}
         </Box>
       </Box>
  
-      {/* Create Project Dialog */}
       <Dialog
         open={openCreateProject}
         onClose={() => setOpenCreateProject(false)}

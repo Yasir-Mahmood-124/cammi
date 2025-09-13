@@ -10,17 +10,10 @@ import {
   Button,
   ListItemIcon,
   Collapse,
-  Drawer,
-  IconButton,
-  AppBar,
-  Toolbar,
 } from "@mui/material";
 import { useState, useEffect } from "react";
-// import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useLogoutMutation } from "@/redux/services/auth/authApi";
-import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import Cookies from "js-cookie";
 import Logo from "../../../assests/images/Logo.png";
 
@@ -39,14 +32,11 @@ import CreateIcon from "@mui/icons-material/Create";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
-import MenuIcon from "@mui/icons-material/Menu";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import EventIcon from "@mui/icons-material/Event";
 import FacebookIcon from "@mui/icons-material/Facebook";
-import CodeIcon from "@mui/icons-material/Code";
 
 import DashboardWelcome from "@/components/DashboardWelcome";
-import Gtm from "@/views/Gtm";
 
 // Dummy Component
 function DummyPage({ title }: { title: string }) {
@@ -83,15 +73,12 @@ interface SidebarCategory {
   children?: {
     key: TabKey;
     label: string;
-    icon: React.ReactNode;
+    icon?: React.ReactNode;
     disabled?: boolean;
   }[];
 }
 
 export default function DashboardPage() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [openMainTab, setOpenMainTab] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey | null>(null);
   const [showLoader, setShowLoader] = useState(false);
@@ -99,8 +86,6 @@ export default function DashboardPage() {
   const dispatch = useDispatch();
   const router = useRouter();
   const [logoutApi] = useLogoutMutation();
-  // const subMenuclicked = localStorage.getItem("subMenuclicked");
-  // const [submenuClicked, setSubmenuClicked] = useState<string | null>(null);
 
   const { data: projectsData, isLoading: projectsLoading } =
     useGetUserProjectsQuery();
@@ -124,12 +109,7 @@ export default function DashboardPage() {
       }
     }
   }, []);
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     const stored = localStorage.getItem("subMenuclicked");
-  //     setSubmenuClicked(stored);
-  //   }
-  // }, []);
+
   const handleLogout = async () => {
     setShowLoader(true);
     try {
@@ -149,11 +129,6 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  // Sidebar structure
   const sidebarData: SidebarCategory[] = [
     {
       label: "Smart Scheduler",
@@ -169,64 +144,23 @@ export default function DashboardPage() {
         },
       ],
     },
-    {
-      label: "Projects",
-      key: "projects", // will be replaced dynamically
-    },
+    { label: "Projects", key: "projects" },
     {
       label: "Templates",
       key: "templates",
       children: [
         { key: "gtm", label: "GTM", icon: <ArticleIcon /> },
         { key: "icp", label: "ICP Generation", icon: <LightbulbIcon /> },
-        {
-          key: "kmf",
-          label: "Key Messaging Framework",
-          icon: <CreateIcon />,
-        },
-        {
-          key: "sr",
-          label: "Strategic Roadmap",
-          icon: <CreateIcon />,
-        },
-        {
-          key: "bs",
-          label: "Brand Strategy",
-          icon: <CreateIcon />,
-        },
-      ],
-    },
-    {
-      label: "Clarity",
-      key: "clarity",
-      children: [
-        { key: "icp", label: "Ideal Customer Profile", icon: <CreateIcon /> },
-      ],
-    },
-    {
-      label: "Align",
-      key: "align",
-      children: [
+        { key: "kmf", label: "Key Messaging Framework", icon: <CreateIcon /> },
         { key: "sr", label: "Strategic Roadmap", icon: <CreateIcon /> },
+        { key: "bs", label: "Brand Strategy", icon: <CreateIcon /> },
       ],
     },
-    {
-      label: "Mobilize",
-      key: "mobilize",
-      children: [
-        { key: "kmf", label: "Messaging Framework", icon: <CreateIcon /> },
-      ],
-    },
-    {
-      label: "Monitor",
-      key: "monitor",
-      children: [{ key: "bi", label: "Brand Identity", icon: <CreateIcon /> }],
-    },
-    {
-      label: "Iterate",
-      key: "iterate",
-      children: [{ key: "budget", label: "Budget", icon: <CreateIcon /> }],
-    },
+    { label: "Clarity", key: "clarity" },
+    { label: "Align", key: "align" },
+    { label: "Mobilize", key: "mobilize" },
+    { label: "Monitor", key: "monitor" },
+    { label: "Iterate", key: "iterate" },
   ];
 
   const drawerContent = (
@@ -236,7 +170,6 @@ export default function DashboardPage() {
         backgroundColor: "background.paper",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
         height: "100%",
         p: 2,
       }}
@@ -278,7 +211,17 @@ export default function DashboardPage() {
             </Typography>
           </Box>
         </Box>
+      </Box>
 
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: "auto",
+          mt: 2,
+          width: "100%",
+          justifyContent: "center",
+        }}
+      >
         <List>
           {sidebarData
             .filter((category) => {
@@ -315,34 +258,46 @@ export default function DashboardPage() {
                   unmountOnExit
                 >
                   <List component="div" disablePadding>
-                    {/* 🔹 Render static children */}
-                    {category.children?.map((child) => (
+                    {category.key === "projects" ? null : category.children &&
+                      category.children.length > 0 ? (
+                      category.children.map((child) => (
+                        <ListItemButton
+                          key={child.key}
+                          selected={activeTab === child.key}
+                          disabled={child.disabled}
+                          onClick={() => {
+                            if (!child.disabled) {
+                              setActiveTab(child.key);
+                              dispatch(setSubmenuClicked(child.key));
+                            }
+                          }}
+                        >
+                          <ListItemIcon>{child.icon}</ListItemIcon>
+                          <ListItemText primary={child.label} />
+                        </ListItemButton>
+                      ))
+                    ) : (
                       <ListItemButton
-                        key={child.key}
-                        selected={activeTab === child.key}
-                        disabled={child.disabled}
-                        // onClick={() => {
-                        //   if (!child.disabled) {
-                        //     setActiveTab(child.key);
-                        //     if (isMobile) setMobileOpen(false);
-                        //   }
-                        // }}
-                        onClick={() => {
-                          if (!child.disabled) {
-                            setActiveTab(child.key);
-                            dispatch(setSubmenuClicked(child.key));
-                            setSubmenuClicked(child.key); // 👈 update state immediately
-                            if (isMobile) setMobileOpen(false);
-                          }
+                        disabled
+                        sx={{
+                          justifyContent: "center",
+                          textAlign: "center",
+                          px: 0,
                         }}
-                        sx={{ pl: 4 }}
                       >
-                        <ListItemIcon>{child.icon}</ListItemIcon>
-                        <ListItemText primary={child.label} />
+                        <ListItemText
+                          primary="Coming Soon 🚧"
+                          sx={{
+                            fontStyle: "italic",
+                            color: "#ffff",
+                            borderRadius: "12px",
+                            background:
+                              "linear-gradient(90deg, #EF4681 0%, #4F8CCA 100%)",
+                          }}
+                        />
                       </ListItemButton>
-                    ))}
+                    )}
 
-                    {/* 🔹 Render projects dynamically inside "Projects" */}
                     {category.key === "projects" && (
                       <>
                         {projectsLoading && (
@@ -381,7 +336,7 @@ export default function DashboardPage() {
                                 JSON.stringify(project)
                               );
                               setProjectName(project.project_name);
-                              if (isMobile) setMobileOpen(false);
+                              setOpenMainTab(null);
                             }}
                             sx={{
                               mb: 1,
@@ -406,17 +361,6 @@ export default function DashboardPage() {
                               transition: "all 0.2s ease-in-out",
                             }}
                           >
-                            <ListItemIcon
-                              sx={{
-                                color:
-                                  projectName === project.project_name
-                                    ? "primary.contrastText"
-                                    : "primary.main",
-                                minWidth: 10,
-                              }}
-                            >
-                              {/* <CodeIcon fontSize="small" /> */}
-                            </ListItemIcon>
                             <ListItemText
                               primary={project.project_name}
                               primaryTypographyProps={{
@@ -425,13 +369,6 @@ export default function DashboardPage() {
                                     ? "bold"
                                     : "medium",
                                 fontSize: "0.9rem",
-                              }}
-                              secondaryTypographyProps={{
-                                fontSize: "0.75rem",
-                                color:
-                                  projectName === project.project_name
-                                    ? "primary.contrastText"
-                                    : "text.secondary",
                               }}
                             />
                           </ListItemButton>
@@ -487,49 +424,29 @@ export default function DashboardPage() {
         backgroundColor: "background.default",
       }}
     >
-      {/* AppBar for Mobile */}
-      {isMobile && (
-        <AppBar position="fixed" sx={{ zIndex: theme.zIndex.drawer + 1 }}>
-          <Toolbar>
-            <IconButton
-              color="inherit"
-              edge="start"
-              onClick={handleDrawerToggle}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" sx={{ ml: 2 }}>
-              Dashboard
-            </Typography>
-          </Toolbar>
-        </AppBar>
-      )}
+      <Box
+        sx={{
+          width: "240px",
+          flexShrink: 0,
+          backgroundColor: "background.paper",
+          boxShadow: 3,
+          display: "flex",
+          flexDirection: "column",
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
+      >
+        {drawerContent}
+      </Box>
 
-      {/* Sidebar */}
-      {isMobile ? (
-        <Drawer
-          anchor="left"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-        >
-          {drawerContent}
-        </Drawer>
-      ) : (
-        <Box
-          sx={{
-            width: "240px",
-            flexShrink: 0,
-            backgroundColor: "background.paper",
-            boxShadow: 3,
-          }}
-        >
-          {drawerContent}
-        </Box>
-      )}
-
-      {/* Main content */}
-      <Box sx={{ flexGrow: 1, overflowY: "auto", mt: isMobile ? 8 : 0 }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: "auto",
+          minWidth: 0,
+          px: 3,
+        }}
+      >
         {renderContent()}
       </Box>
     </Box>
@@ -537,17 +454,20 @@ export default function DashboardPage() {
 }
 
 
-
 // "use client";
 // import React from 'react';
 // import Icp from '@/views/Icp';
 // import Gtm from '@/views/Gtm';
+// import Linkedin from '@/views/linkedin';
+// import Events from '@/views/events';
 
 // const DashboardPage = () => {
 //   return (
 //     <div>
-//         <Gtm />
+//         {/* <Gtm /> */}
 //         {/* <Icp /> */}
+//         {/* <Linkedin /> */}
+//         <Events />
 //     </div>
 //   )
 // }

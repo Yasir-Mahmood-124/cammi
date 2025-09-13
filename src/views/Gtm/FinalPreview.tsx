@@ -12,7 +12,9 @@ import EditIcon from "@mui/icons-material/Edit";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
 import GradientButton from "@/components/common/GradientButton";
 import { useUploadTextFileMutation } from "@/redux/services/common/uploadApiSlice";
-import Cookies from "js-cookie"; // ✅ to read token from cookies
+import { useGetDocxFileMutation } from "@/redux/services/common/downloadApi"; // ✅ import
+import Cookies from "js-cookie";
+import DocumentActions from "./DocumentActions";
 
 interface QAItem {
     question: string;
@@ -29,19 +31,27 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
     const [editIndex, setEditIndex] = useState<number | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-    // ✅ hook from RTK query
-    const [uploadTextFile, { isLoading, isSuccess, isError, error }] =
-        useUploadTextFileMutation();
+    // Upload mutation
+    const [uploadTextFile, { isLoading }] = useUploadTextFileMutation();
 
-    // ✅ Autofocus and move cursor to end when edit mode enabled
+    // Download mutation
+    const [getDocxFile] = useGetDocxFileMutation();
+
+    // WebSocket states
+    const [wsActive, setWsActive] = useState(false);
+    const [docReady, setDocReady] = useState(false);
+
+    // Typing effect states
+    const [displayedContent, setDisplayedContent] = useState("");
+    const pendingQueue = useRef<string[]>([]);
+    const typingInterval = useRef<NodeJS.Timeout | null>(null);
+
+    // Autofocus when editing
     useEffect(() => {
         if (editIndex !== null && textareaRef.current) {
             const textarea = textareaRef.current;
             textarea.focus();
-            textarea.setSelectionRange(
-                textarea.value.length,
-                textarea.value.length
-            );
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
         }
     }, [editIndex]);
 
@@ -62,22 +72,39 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
         setEditIndex(null);
     };
 
-    // ✅ Generate Document API call
+    // Typing effect function
+    const startTyping = (text: string) => {
+        let i = 0;
+
+        typingInterval.current = setInterval(() => {
+            setDisplayedContent((prev) => prev + text[i]);
+            i++;
+
+            if (i >= text.length) {
+                clearInterval(typingInterval.current!);
+                typingInterval.current = null;
+
+                if (pendingQueue.current.length > 0) {
+                    const nextMsg = pendingQueue.current.shift()!;
+                    startTyping("\n\n" + nextMsg);
+                }
+            }
+        }, 15);
+    };
+
+    // Upload + WebSocket
     const handleGenerateDocument = async () => {
         try {
             const dynamicFileName = "businessidea.txt";
             const savedToken = Cookies.get("token");
-            // const project_id = JSON.parse(
-            //     localStorage.getItem("currentProject") || "{}"
-            // ).project_id;
-            const project_id = "30241e60-0554-4bd4-88f2-c2fcf6d339dd";
+            const project_id = JSON.parse(
+                localStorage.getItem("currentProject") || "{}"
+            ).project_id;
 
-            // Combine Q&A into text
             const textContent = qaList
                 .map((qa) => `Q: ${qa.question}\nA: ${qa.answer}`)
                 .join("\n\n");
 
-            // Convert to base64
             const base64Content = btoa(unescape(encodeURIComponent(textContent)));
 
             const payload = {
@@ -88,12 +115,65 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                 document_type: "gtm",
             };
 
-            console.log("📤 Upload payload:", payload);
-
             await uploadTextFile(payload).unwrap();
             console.log("✅ File uploaded successfully");
+
+            setWsActive(true);
+            setDisplayedContent("Waiting for WebSocket messages...");
+            setDocReady(false);
+
+            const ws = new WebSocket(
+                `wss://4iqvtvmxle.execute-api.us-east-1.amazonaws.com/prod/?session_id=${savedToken}`
+            );
+
+            ws.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+
+                    if (
+                        message.type === "tier_completion" &&
+                        message.data?.content?.content
+                    ) {
+                        const newContent = message.data.content.content;
+
+                        if (typingInterval.current) {
+                            pendingQueue.current.push(newContent);
+                        } else {
+                            startTyping(
+                                displayedContent === "Waiting for WebSocket messages..."
+                                    ? newContent
+                                    : "\n\n" + newContent
+                            );
+                        }
+                    }
+
+                    if (
+                        message.action === "sendMessage" &&
+                        message.body === "Document generated successfully!"
+                    ) {
+                        console.log("✅ Document generation completed!");
+                        ws.close();
+                        setWsActive(false);
+                        setDocReady(true);
+                    }
+                } catch (err) {
+                    console.error("❌ Failed parsing WS message", err);
+                }
+            };
+
+            ws.onerror = (err) => {
+                console.error("❌ WebSocket error:", err);
+                setDisplayedContent("WebSocket connection error.");
+                setWsActive(false);
+            };
+
+            ws.onclose = (event) => {
+                console.log("🔗 WebSocket closed:", event.code, event.reason);
+                setWsActive(false);
+            };
         } catch (err) {
-            console.error("❌ Upload failed", err);
+            console.error("❌ Upload/WebSocket failed", err);
+            setWsActive(false);
         }
     };
 
@@ -107,90 +187,58 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                 p: 3,
             }}
         >
-            {qaList.map((qa, idx) => (
-                <Card
-                    key={idx}
-                    sx={{
-                        background: "#fff",
-                        border: "0.5px solid #000",
-                        borderRadius: 2,
-                        boxShadow: "none",
-                        p: 2,
-                        mb: 2,
-                        display: "flex",
-                        flexDirection: "column",
-                        position: "relative",
-                    }}
-                >
-                    {/* Question + Edit Icon */}
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                        }}
-                    >
-                        <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                            {qa.question}
-                        </Typography>
-
-                        <IconButton
-                            onClick={() =>
-                                setEditIndex(editIndex === idx ? null : idx)
-                            }
+            {/* 🔹 Show Q&A before generating */}
+            {!wsActive && !docReady && (
+                <>
+                    {qaList.map((qa, idx) => (
+                        <Card
+                            key={idx}
                             sx={{
                                 background: "#fff",
-                                border: "1px solid #ddd",
-                                borderRadius: "50%",
-                                width: 28,
-                                height: 28,
-                                p: 0,
-                                "&:hover": { background: "#f0f0f0" },
+                                border: "0.5px solid #000",
+                                borderRadius: 2,
+                                boxShadow: "none",
+                                p: 2,
+                                mb: 2,
+                                display: "flex",
+                                flexDirection: "column",
+                                position: "relative",
                             }}
                         >
-                            <EditIcon sx={{ fontSize: 16, color: "#000" }} />
-                        </IconButton>
-                    </Box>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                }}
+                            >
+                                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                    {qa.question}
+                                </Typography>
 
-                    {/* Answer (editable or read-only) */}
-                    <Box sx={{ mt: 1, minHeight: "40px" }}>
-                        {editIndex === idx ? (
-                            <>
-                                <Box
+                                <IconButton
+                                    onClick={() => setEditIndex(editIndex === idx ? null : idx)}
                                     sx={{
-                                        position: "relative",
-                                        borderRadius: 3,
-                                        "&::before": {
-                                            content: '""',
-                                            position: "absolute",
-                                            inset: 0,
-                                            padding: "2px",
-                                            borderRadius: "inherit",
-                                            background:
-                                                "linear-gradient(270deg, #F34A84, #5D8AC6, #F34A84)",
-                                            backgroundSize: "300% 300%",
-                                            animation:
-                                                "moveBorder 4s linear infinite",
-                                            WebkitMask:
-                                                "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                                            WebkitMaskComposite:
-                                                "destination-out",
-                                            maskComposite: "exclude",
-                                            pointerEvents: "none",
-                                        },
+                                        background: "#fff",
+                                        border: "1px solid #ddd",
+                                        borderRadius: "50%",
+                                        width: 28,
+                                        height: 28,
+                                        p: 0,
+                                        "&:hover": { background: "#f0f0f0" },
                                     }}
                                 >
-                                    {/* Inner box ensures text is above border mask */}
-                                    <Box sx={{ position: "relative", zIndex: 1 }}>
+                                    <EditIcon sx={{ fontSize: 16, color: "#000" }} />
+                                </IconButton>
+                            </Box>
+
+                            <Box sx={{ mt: 1, minHeight: "40px" }}>
+                                {editIndex === idx ? (
+                                    <>
                                         <TextareaAutosize
                                             ref={textareaRef}
                                             value={qa.answer}
-                                            onChange={(e) =>
-                                                handleAnswerChange(
-                                                    idx,
-                                                    e.target.value
-                                                )
-                                            }
+                                            onChange={(e) => handleAnswerChange(idx, e.target.value)}
                                             style={{
                                                 width: "100%",
                                                 minHeight: "60px",
@@ -205,84 +253,78 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                                                 color: "#000",
                                             }}
                                         />
-                                    </Box>
-                                </Box>
-
-                                {/* ✅ Save + Cancel Buttons aligned right */}
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: "flex-end",
-                                        gap: 2,
-                                        mt: 2,
-                                    }}
-                                >
-                                    <GradientButton
-                                        text="Save"
-                                        onClick={handleSave}
-                                        width="120px"
-                                        fontSize="0.9rem"
-                                        height="40px"
-                                    />
-                                    <Button
-                                        onClick={handleCancel}
-                                        sx={{
-                                            width: "120px",
-                                            height: "40px",
-                                            border: "1px solid #000",
-                                            borderRadius: 3,
-                                            fontWeight: 700,
-                                            fontSize: "0.9rem",
-                                            color: "#000",
-                                            textTransform: "none",
-                                            background: "#fff",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            "&:hover": {
-                                                background: "#f9f9f9",
-                                            },
-                                        }}
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                justifyContent: "flex-end",
+                                                gap: 2,
+                                                mt: 2,
+                                            }}
+                                        >
+                                            <GradientButton
+                                                text="Save"
+                                                onClick={handleSave}
+                                                width="120px"
+                                                height="40px"
+                                            />
+                                            <Button onClick={handleCancel}>Cancel</Button>
+                                        </Box>
+                                    </>
+                                ) : (
+                                    <Typography
+                                        sx={{ color: "#555", fontSize: 14, fontWeight: 400 }}
                                     >
-                                        Cancel
-                                    </Button>
-                                </Box>
-                            </>
-                        ) : (
-                            <Typography
-                                variant="body2"
-                                sx={{
-                                    color: "#555",
-                                    fontSize: 14,
-                                    fontWeight: 400,
-                                }}
-                            >
-                                {qa.answer}
-                            </Typography>
-                        )}
+                                        {qa.answer}
+                                    </Typography>
+                                )}
+                            </Box>
+                        </Card>
+                    ))}
+
+                    {/* Generate Button */}
+                    <Box sx={{ display: "flex", justifyContent: "center" }}>
+                        <GradientButton
+                            text={isLoading ? "Uploading..." : "Generate Document"}
+                            onClick={handleGenerateDocument}
+                            disabled={isLoading}
+                        />
                     </Box>
-                </Card>
-            ))}
+                </>
+            )}
 
-            {/* 🔹 Generate Document button */}
-            <Box sx={{ display: "flex", justifyContent: "center" }}>
-                <GradientButton
-                    text={isLoading ? "Uploading..." : "Generate Document"}
-                    onClick={handleGenerateDocument}
-                    disabled={isLoading}
-                />
-            </Box>
+            {/* 🔹 Typing effect */}
+            {wsActive && (
+                <Box
+                    sx={{
+                        mt: 2,
+                        p: 2,
+                        bgcolor: "#fff",
+                        borderRadius: 2,
+                        minHeight: "200px",
+                        whiteSpace: "pre-line",
+                        fontSize: "14px",
+                        lineHeight: 1.5,
+                        fontFamily: "monospace",
+                    }}
+                >
+                    {displayedContent}
+                </Box>
+            )}
 
-            {/* 🔹 Animated border keyframes */}
-            <style>
-                {`
-          @keyframes moveBorder {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-        `}
-            </style>
+            {/* 🔹 Final message */}
+            {docReady && (
+                <Box sx={{ mt: 3, textAlign: "center" }}>
+                    <Typography
+                        variant="body1"
+                        sx={{ fontWeight: 700, color: "green", mb: 2 }}
+                    >
+                        Your Document is Ready!
+                    </Typography>
+
+                    <DocumentActions /> {/* ⬅️ Separate clean component */}
+                </Box>
+            )}
+
         </Card>
     );
 };

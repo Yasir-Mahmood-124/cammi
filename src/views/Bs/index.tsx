@@ -5,7 +5,7 @@ import DocumentSelector from "@/components/common/documentSelector";
 import UploadDocument from "@/components/common/UploadDocument";
 import GradientCard from "@/components/common/GradientCard";
 
-const Icp = () => {
+const Bs = () => {
   const [selection, setSelection] = useState<"yes" | "no" | null>(null);
 
   const handleSelection = (value: "yes" | "no") => {
@@ -17,7 +17,7 @@ const Icp = () => {
     <>
 
       <GradientCard
-        heading="ICP Document Generation"
+        heading="BS Document Generation"
         content="A comprehensive framework capturing all key elements required to execute a successful go-to-market plan."
       />
 
@@ -46,4 +46,4 @@ const Icp = () => {
   );
 };
 
-export default Icp;
+export default Bs;

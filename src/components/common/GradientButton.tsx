@@ -27,7 +27,6 @@ const GradientButton: React.FC<GradientButtonProps> = ({
       size={size}
       disabled={disabled}
       sx={{
-        // mt: 3,
         py: 1,
         px: 2,
         width: width,
