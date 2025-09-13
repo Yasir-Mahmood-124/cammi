@@ -156,19 +156,22 @@ const Login = () => {
         </Stack>
 
         {/* Login Button with Loader */}
-        <GradientButton
-          text={
-            isLoading ? (
-              <CircularProgress size={20} sx={{ color: "#fff" }} />
-            ) : (
-              "Log In"
-            )
-          }
-          onClick={handleLogin}
-          width="80%"
-          fontSize="1rem"
-          disabled={isLoading}
-        />
+        <Box sx={{ marginTop: 3 }}>
+          <GradientButton
+            text={
+              isLoading ? (
+                <CircularProgress size={20} sx={{ color: "#fff" }} />
+              ) : (
+                "Log In"
+              )
+            }
+            onClick={handleLogin}
+            width="80%"
+            fontSize="1rem"
+            disabled={isLoading}
+          />
+        </Box>
+
 
         {/* Not registered yet? */}
         <Typography variant="body1" color="text.primary" sx={{ mt: 2, textAlign: "center" }}>

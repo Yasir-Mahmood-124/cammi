@@ -12,10 +12,7 @@ const GradientCard: React.FC<GradientCardProps> = ({ heading, content }) => {
   return (
     <Box
       sx={{
-        width: "105%",
-        maxWidth: 800, // match UserInput width
-        mx: "auto",
-        px: 1,
+        width: "100%",   // full width
       }}
     >
       <Card
@@ -32,19 +29,15 @@ const GradientCard: React.FC<GradientCardProps> = ({ heading, content }) => {
         }}
       >
         <CardContent sx={{ textAlign: "left", width: "100%", p: 0 }}>
-          <Typography
-            variant="h5"
-            fontWeight="600"
-            gutterBottom
-          >
+          <Typography variant="h5" fontWeight="600" gutterBottom>
             {heading}
           </Typography>
           <Typography
             variant="body2"
             sx={{
-              maxWidth: "70%",
+              maxWidth: { xs: "100%", md: "70%" }, // responsive wrapping
               lineHeight: 1.5,
-              fontWeight: 400, // ✅ lighter font weight
+              fontWeight: 400,
             }}
           >
             {content}

@@ -130,13 +130,17 @@ const Register = () => {
           </Box>
         </Stack>
 
-        <GradientButton
-          text="Sign Up"
-          onClick={handleSignUp}
-          width="80%"
-          fontSize="1rem"
-          disabled={isLoading}
-        />
+        <Box sx={{ marginTop: 3 }}>
+          <GradientButton
+            text="Sign Up"
+            onClick={handleSignUp}
+            width="80%"
+            fontSize="1rem"
+            disabled={isLoading}
+          />
+        </Box>
+
+
 
         <Typography variant="body1" color="text.primary" sx={{ mt: 2, textAlign: "center" }}>
           Already registered?{" "}

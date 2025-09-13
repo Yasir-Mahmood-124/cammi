@@ -10,6 +10,7 @@ interface GradientButtonProps {
   fontSize?: string | number;
   size?: "small" | "medium" | "large";
   disabled?: boolean;
+  height?: string | number;
 }
 
 const GradientButton: React.FC<GradientButtonProps> = ({
@@ -26,7 +27,7 @@ const GradientButton: React.FC<GradientButtonProps> = ({
       size={size}
       disabled={disabled}
       sx={{
-        mt: 3,
+        // mt: 3,
         py: 1,
         px: 2,
         width: width,

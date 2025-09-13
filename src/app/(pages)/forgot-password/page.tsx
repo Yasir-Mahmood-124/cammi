@@ -126,13 +126,16 @@ const ResetPassword = () => {
                   },
                 }}
               />
-              <GradientButton
-                text={isSendingCode ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Send Reset Code"}
-                onClick={handleSendResetCode}
-                width="100%"
-                fontSize="1rem"
-                disabled={isSendingCode}
-              />
+              <Box sx={{ marginTop: 3 }}>
+                <GradientButton
+                  text={isSendingCode ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Send Reset Code"}
+                  onClick={handleSendResetCode}
+                  width="100%"
+                  fontSize="1rem"
+                  disabled={isSendingCode}
+                />
+              </Box>
+
             </Box>
           ) : (
             // Step 2: Reset Password Form

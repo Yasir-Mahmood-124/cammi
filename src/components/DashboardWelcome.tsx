@@ -19,58 +19,113 @@ import {
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import SearchIcon from "@mui/icons-material/Search";
 import CreateProject from "./CreateProject";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import {
+  setSubmenuClicked,
+  loadSubmenuFromStorage,
+} from "@/redux/services/features/submenuSlice";
+
+//Pages
+import Gtm from "@/views/Gtm";
+import Icp from "@/views/Icp";
+ 
+// Individual sub-pages
+const GeneralStragicDocument = ({ onBack }: { onBack: () => void }) => (
+  <Box sx={{ p: 4 }}>
+    <Gtm />
+  </Box>
+);
+
+const IdealCustomerProfile = ({ onBack }: { onBack: () => void }) => (
+  <Box sx={{ p: 4 }}>
+    <Icp />
+  </Box>
+);
+ 
+const StrategicRoadmap = ({ onBack }: { onBack: () => void }) => (
+  <Box sx={{ p: 4 }}>
+    <Typography variant="h4">Strategic Roadmap</Typography>
+  </Box>
+);
+ 
+const MessagingFramework = ({ onBack }: { onBack: () => void }) => (
+  <Box sx={{ p: 4 }}>
+    <Typography variant="h4">Messaging Framework</Typography>
+  </Box>
+);
+ 
+const BrandIdentity = ({ onBack }: { onBack: () => void }) => (
+  <Box sx={{ p: 4 }}>
+    <Typography variant="h4">Brand Identity</Typography>
+  </Box>
+);
+ 
+const Budget = ({ onBack }: { onBack: () => void }) => (
+  <Box sx={{ p: 4 }}>
+    <Typography variant="h4">Budget</Typography>
+  </Box>
+);
  
 const DashboardWelcome: React.FC = () => {
   const theme = useTheme();
+  const dispatch = useDispatch();
+ 
+  // 🔹 Global submenu state
+  const submenuClicked = useSelector(
+    (state: RootState) => state.submenu.clicked
+  );
+ 
   const [anchorEls, setAnchorEls] = useState<
     Record<string, HTMLElement | null>
   >({});
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [openCreateProject, setOpenCreateProject] = useState(false);
  
+  // Load submenu state on mount
+  useEffect(() => {
+    dispatch(loadSubmenuFromStorage());
+  }, [dispatch]);
+ 
   const sidebarData = [
     {
-      label: "Clarity",
+      label: "Clarify",
       key: "clarity",
-      children: [{ key: "icp", label: "Ideal Customer Profile" }],
+      children: [{ key: "gtm", label: "GTM Document" },
+        { key: "icp", label: "Ideal Customer Profile" },
+        { key: "kmf", label: "Key Messaging Framework" },
+        { key: "sr", label: "Strategic Roadmap" },
+        { key: "bs", label: "Business Strategy" }
+      ],
     },
     {
       label: "Align",
       key: "align",
-      children: [{ key: "sr", label: "Strategic Roadmap" }],
+      // children: [{ key: "sr", label: "Strategic Roadmap" }],
     },
     {
       label: "Mobilize",
       key: "mobilize",
-      children: [{ key: "kmf", label: "Messaging Framework" }],
+      // children: [{ key: "kmf", label: "Messaging Framework" }],
     },
     {
       label: "Monitor",
       key: "monitor",
-      children: [{ key: "bi", label: "Brand Identity" }],
+      // children: [{ key: "bi", label: "Brand Identity" }],
     },
     {
       label: "Iterate",
       key: "iterate",
-      children: [{ key: "budget", label: "Budget" }],
+      // children: [{ key: "budget", label: "Budget" }],
     },
   ];
  
-  useEffect(() => {
-    const storedProject = localStorage.getItem("projectId");
-    if (storedProject) {
-      setSelectedProject(storedProject);
-    }
-  }, []);
- 
   const handleClick = (key: string, event: React.MouseEvent<HTMLElement>) => {
-    const storedProject = localStorage.getItem("projectId");
- 
+    const storedProject = localStorage.getItem("currentProject");
     if (!storedProject) {
       setOpenCreateProject(true);
       return;
     }
- 
     setAnchorEls((prev) => ({ ...prev, [key]: event.currentTarget }));
   };
  
@@ -78,6 +133,46 @@ const DashboardWelcome: React.FC = () => {
     setAnchorEls((prev) => ({ ...prev, [key]: null }));
   };
  
+  // Map submenuClicked → actual component
+  const renderActiveComponent = () => {
+    switch (submenuClicked) {
+      case "gtm":
+        return (
+          <GeneralStragicDocument
+            onBack={() => dispatch(setSubmenuClicked(null))}
+          />
+        );
+      case "icp":
+        return (
+          <IdealCustomerProfile onBack={() => dispatch(setSubmenuClicked(null))} />
+        );
+      case "kmf":
+        return (
+          <MessagingFramework
+            onBack={() => dispatch(setSubmenuClicked(null))}
+          />
+        );
+      case "bi":
+        return (
+          <BrandIdentity onBack={() => dispatch(setSubmenuClicked(null))} />
+        );
+      case "budget":
+        return <Budget onBack={() => dispatch(setSubmenuClicked(null))} />;
+      default:
+        return null;
+    }
+  };
+ 
+  // If submenuClicked → show full screen component
+  if (submenuClicked) {
+    return (
+      <Box sx={{ width: "100%", height: "100vh", bgcolor: "#fff" }}>
+        {renderActiveComponent()}
+      </Box>
+    );
+  }
+ 
+  // Otherwise show dashboard
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box width="100%" sx={{ px: 5 }}>
@@ -107,6 +202,7 @@ const DashboardWelcome: React.FC = () => {
           />
         </Box>
  
+        {/* Welcome Card */}
         <Paper
           elevation={0}
           sx={{
@@ -161,6 +257,7 @@ const DashboardWelcome: React.FC = () => {
           </Box>
         </Paper>
  
+        {/* Categories */}
         <Box
           mt={4}
           display="flex"
@@ -228,46 +325,44 @@ const DashboardWelcome: React.FC = () => {
                   },
                 }}
               >
-                {category.children.map((child) => (
-                  <MenuItem
-                    key={child.key}
-                    onClick={() => {
-                      console.log("Selected:", child.label);
-                      handleClose(category.key);
-                    }}
-                    sx={{
-                      color: "black",
-                      "&:hover": {
-                        bgcolor: "white",
+                {category.children &&
+                  category.children.map((child) => (
+                    <MenuItem
+                      key={child.key}
+                      onClick={() => {
+                        dispatch(setSubmenuClicked(child.key)); // 🔹 Save to global state
+                        handleClose(category.key);
+                      }}
+                      sx={{
                         color: "black",
-                      },
-                    }}
-                  >
-                    {child.label}
-                  </MenuItem>
-                ))}
+                        "&:hover": {
+                          bgcolor: "white",
+                          color: "black",
+                        },
+                      }}
+                    >
+                      {child.label}
+                    </MenuItem>
+                  ))}
               </Menu>
             </Box>
           ))}
         </Box>
       </Box>
  
+      {/* Create Project Dialog */}
       <Dialog
         open={openCreateProject}
         onClose={() => setOpenCreateProject(false)}
         PaperProps={{
           sx: {
             borderRadius: 5,
-            // background: "linear-gradient(135deg, #F6F8FB 0%, #E6EEF8 100%)",
           },
         }}
       >
         <CreateProject
           onCreate={(data) => {
             console.log("New project created:", data);
-
-            localStorage.getItem("currentProject");
-
             setSelectedProject(data.project);
             setOpenCreateProject(false);
           }}
