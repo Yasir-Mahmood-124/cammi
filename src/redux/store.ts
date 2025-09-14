@@ -11,6 +11,10 @@ import { linkedinLoginApi } from "./services/linkedin/linkedinLoginApi";
 import { linkedinPostApi } from "./services/linkedin/linkedinPostApi";
 import { schedulePostApi } from "./services/linkedin/schedulePostApi";
 import { viewApiSlice } from "./services/linkedin/viewApiSlice";
+import {getUnansweredQuestionsApi} from "./services/common/getUnansweredQuestionsApi";
+import { addQuestionApi } from "./services/common/addQuestion";
+import { getQuestionsApi } from "./services/common/getQuestionsApi";
+import { editQuestionApi } from "./services/common/editQuestion";
 
 export const store = configureStore({
   reducer: {
@@ -26,6 +30,10 @@ export const store = configureStore({
     [linkedinPostApi.reducerPath]: linkedinPostApi.reducer,
     [schedulePostApi.reducerPath]: schedulePostApi.reducer,
     [viewApiSlice.reducerPath]: viewApiSlice.reducer,
+    [getUnansweredQuestionsApi.reducerPath]: getUnansweredQuestionsApi.reducer,
+    [addQuestionApi.reducerPath]: addQuestionApi.reducer,
+    [getQuestionsApi.reducerPath]: getQuestionsApi.reducer,
+    [editQuestionApi.reducerPath]: editQuestionApi.reducer,
     
   },
 
@@ -43,6 +51,10 @@ export const store = configureStore({
         linkedinPostApi.middleware,
         schedulePostApi.middleware,
         viewApiSlice.middleware,
+        getUnansweredQuestionsApi.middleware,
+        addQuestionApi.middleware,
+        getQuestionsApi.middleware,
+        editQuestionApi.middleware,
       ),
 });
 

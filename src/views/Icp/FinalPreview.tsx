@@ -12,74 +12,120 @@ import EditIcon from "@mui/icons-material/Edit";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
 import GradientButton from "@/components/common/GradientButton";
 import { useUploadTextFileMutation } from "@/redux/services/common/uploadApiSlice";
-import { useGetDocxFileMutation } from "@/redux/services/common/downloadApi"; // ✅ import
+import { useGetDocxFileMutation } from "@/redux/services/common/downloadApi";
+import { useEditQuestionMutation } from "@/redux/services/common/editQuestion";
 import Cookies from "js-cookie";
 import DocumentActions from "./DocumentActions";
 
-interface QAItem {
+export interface QAItem {
     question: string;
     answer: string;
 }
 
 interface FinalPreviewProps {
     data: QAItem[];
-    onEdit?: (updatedData: QAItem[]) => void;
+    editIndex: number | null;
+    onEditChange: (index: number | null) => void;
+    onSave: (updatedData: QAItem[]) => void;
+    document_type: string;
 }
 
-const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
+const FinalPreview: React.FC<FinalPreviewProps> = ({
+    data,
+    editIndex,
+    onEditChange,
+    onSave,
+    document_type,
+}) => {
     const [qaList, setQaList] = useState<QAItem[]>(data);
-    const [editIndex, setEditIndex] = useState<number | null>(null);
+    const [editingAnswer, setEditingAnswer] = useState<string>("");
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-    // Upload mutation
     const [uploadTextFile, { isLoading }] = useUploadTextFileMutation();
-
-    // Download mutation
     const [getDocxFile] = useGetDocxFileMutation();
+    const [editQuestion, { isLoading: isEditLoading }] = useEditQuestionMutation();
 
-    // WebSocket states
     const [wsActive, setWsActive] = useState(false);
     const [docReady, setDocReady] = useState(false);
 
-    // Typing effect states
     const [displayedContent, setDisplayedContent] = useState("");
     const pendingQueue = useRef<string[]>([]);
     const typingInterval = useRef<NodeJS.Timeout | null>(null);
 
-    // Autofocus when editing
+    // Update qaList when data prop changes
+    useEffect(() => {
+        setQaList(data);
+    }, [data]);
+
+    // Autofocus when editing and set initial editing value
     useEffect(() => {
         if (editIndex !== null && textareaRef.current) {
+            setEditingAnswer(qaList[editIndex]?.answer || "");
             const textarea = textareaRef.current;
             textarea.focus();
-            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+            textarea.setSelectionRange(
+                textarea.value.length,
+                textarea.value.length
+            );
         }
-    }, [editIndex]);
+    }, [editIndex, qaList]);
 
-    const handleAnswerChange = (index: number, value: string) => {
-        const updated = [...qaList];
-        updated[index].answer = value;
-        setQaList(updated);
+    const handleAnswerChange = (value: string) => {
+        setEditingAnswer(value);
     };
 
-    const handleSave = () => {
-        if (editIndex !== null) {
-            onEdit?.(qaList);
-            setEditIndex(null);
+    const handleSaveClick = async () => {
+        if (editIndex === null) return;
+
+        try {
+            const storedProject = localStorage.getItem("currentProject");
+            const project = storedProject ? JSON.parse(storedProject) : null;
+            const project_id = project?.project_id;
+
+            if (!project_id) {
+                console.error("No project_id found in localStorage");
+                return;
+            }
+
+            // Call the edit question API
+            await editQuestion({
+                project_id,
+                question_text: qaList[editIndex].question,
+                answer_text: editingAnswer,
+            }).unwrap();
+
+            // Update local state
+            const updated = [...qaList];
+            updated[editIndex].answer = editingAnswer;
+            setQaList(updated);
+
+            // Call parent's onSave
+            onSave(updated);
+
+            // Exit edit mode
+            onEditChange(null);
+
+            console.log("✅ Question updated successfully");
+        } catch (error) {
+            console.error("❌ Failed to update question:", error);
         }
     };
 
-    const handleCancel = () => {
-        setEditIndex(null);
+    const handleCancelClick = () => {
+        setEditingAnswer("");
+        onEditChange(null);
+    };
+
+    const handleEditClick = (index: number) => {
+        onEditChange(editIndex === index ? null : index);
     };
 
     // Typing effect function
     const startTyping = (text: string) => {
         let i = 0;
-
         typingInterval.current = setInterval(() => {
             setDisplayedContent((prev) => prev + text[i]);
             i++;
-
             if (i >= text.length) {
                 clearInterval(typingInterval.current!);
                 typingInterval.current = null;
@@ -97,9 +143,9 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
         try {
             const dynamicFileName = "businessidea.txt";
             const savedToken = Cookies.get("token");
-            const project_id = JSON.parse(
-                localStorage.getItem("currentProject") || "{}"
-            ).project_id;
+            const storedProject = localStorage.getItem("currentProject");
+            const project = storedProject ? JSON.parse(storedProject) : null;
+            const project_id = project?.project_id;
 
             const textContent = qaList
                 .map((qa) => `Q: ${qa.question}\nA: ${qa.answer}`)
@@ -112,7 +158,7 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                 fileContent: base64Content,
                 token: savedToken,
                 project_id: project_id,
-                document_type: "gtm",
+                document_type: document_type,
             };
 
             await uploadTextFile(payload).unwrap();
@@ -187,7 +233,7 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                 p: 3,
             }}
         >
-            {/* 🔹 Show Q&A before generating */}
+            {/* Show Q&A before generating */}
             {!wsActive && !docReady && (
                 <>
                     {qaList.map((qa, idx) => (
@@ -205,6 +251,7 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                                 position: "relative",
                             }}
                         >
+                            {/* Question + Edit Button */}
                             <Box
                                 sx={{
                                     display: "flex",
@@ -217,7 +264,8 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                                 </Typography>
 
                                 <IconButton
-                                    onClick={() => setEditIndex(editIndex === idx ? null : idx)}
+                                    onClick={() => handleEditClick(idx)}
+                                    disabled={isEditLoading}
                                     sx={{
                                         background: "#fff",
                                         border: "1px solid #ddd",
@@ -232,15 +280,17 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                                 </IconButton>
                             </Box>
 
+                            {/* Answer / Edit Mode */}
                             <Box sx={{ mt: 1, minHeight: "40px" }}>
                                 {editIndex === idx ? (
                                     <>
                                         <Box
                                             sx={{
                                                 position: "relative",
-                                                borderRadius: "12px", // rounded corners
-                                                padding: "2px", // smaller and even padding
-                                                background: "linear-gradient(90deg, #d93d76, #3b6db0, #d93d76)",
+                                                borderRadius: "12px",
+                                                padding: "2px",
+                                                background:
+                                                    "linear-gradient(90deg, #d93d76, #3b6db0, #d93d76)",
                                                 backgroundSize: "200% 100%",
                                                 animation: "gradientMove 3s linear infinite",
                                                 display: "flex",
@@ -248,22 +298,22 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                                         >
                                             <TextareaAutosize
                                                 ref={textareaRef}
-                                                value={qa.answer}
-                                                onChange={(e) => handleAnswerChange(idx, e.target.value)}
+                                                value={editingAnswer}
+                                                onChange={(e) => handleAnswerChange(e.target.value)}
                                                 style={{
                                                     width: "100%",
                                                     minHeight: "60px",
-                                                    lineHeight: "1.5", // ensure consistent height
+                                                    lineHeight: "1.5",
                                                     resize: "none",
                                                     outline: "none",
                                                     fontSize: "14px",
                                                     fontFamily: "inherit",
-                                                    padding: "6px 8px", // slightly reduce top/bottom padding
-                                                    borderRadius: "10px", // slightly smaller than outer box
+                                                    padding: "6px 8px",
+                                                    borderRadius: "10px",
                                                     border: "none",
                                                     background: "#fff",
                                                     color: "#000",
-                                                    boxSizing: "border-box", // make sure padding doesn't overflow
+                                                    boxSizing: "border-box",
                                                 }}
                                             />
                                         </Box>
@@ -277,21 +327,27 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                                             }}
                                         >
                                             <GradientButton
-                                                text="Save"
-                                                onClick={handleSave}
+                                                text={isEditLoading ? "Saving..." : "Save"}
+                                                onClick={handleSaveClick}
+                                                disabled={isEditLoading}
                                                 width="120px"
                                                 height="40px"
                                             />
-                                            <Button onClick={handleCancel}>Cancel</Button>
+                                            <Button
+                                                onClick={handleCancelClick}
+                                                disabled={isEditLoading}
+                                            >
+                                                Cancel
+                                            </Button>
                                         </Box>
 
                                         <style>
                                             {`
-        @keyframes gradientMove {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 200% 50%; }
-        }
-      `}
+                        @keyframes gradientMove {
+                          0% { background-position: 0% 50%; }
+                          100% { background-position: 200% 50%; }
+                        }
+                      `}
                                         </style>
                                     </>
                                 ) : (
@@ -301,9 +357,6 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                                         {qa.answer}
                                     </Typography>
                                 )}
-
-
-
                             </Box>
                         </Card>
                     ))}
@@ -313,13 +366,13 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                         <GradientButton
                             text={isLoading ? "Uploading..." : "Generate Document"}
                             onClick={handleGenerateDocument}
-                            disabled={isLoading}
+                            disabled={isLoading || editIndex !== null}
                         />
                     </Box>
                 </>
             )}
 
-            {/* 🔹 Typing effect */}
+            {/* Typing effect */}
             {wsActive && (
                 <Box
                     sx={{
@@ -338,7 +391,7 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                 </Box>
             )}
 
-            {/* 🔹 Final message */}
+            {/* Final message */}
             {docReady && (
                 <Box sx={{ mt: 3, textAlign: "center" }}>
                     <Typography
@@ -348,10 +401,9 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                         Your Document is Ready!
                     </Typography>
 
-                    <DocumentActions /> {/* ⬅️ Separate clean component */}
+                    <DocumentActions document_type={document_type} />
                 </Box>
             )}
-
         </Card>
     );
 };

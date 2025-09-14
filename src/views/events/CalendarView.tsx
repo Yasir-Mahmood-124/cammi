@@ -67,24 +67,24 @@ const getStatusConfig = (status: string) => {
     case "pending":
       return {
         icon: <ScheduleOutlined sx={{ fontSize: 14 }} />,
-        color: "#ff9800" as const,
-        bgColor: "#fff3e0",
+        color: "#e67e22" as const, // Orange for pending
+        bgColor: "#f9e0ce", // Light orange background
         label: "Pending",
         chipColor: "warning" as const
       };
     case "scheduled":
       return {
         icon: <SendOutlined sx={{ fontSize: 14 }} />,
-        color: "#2196f3" as const,
-        bgColor: "#e3f2fd",
+        color: "#3498db" as const, // Blue for scheduled
+        bgColor: "#c3d7ff", // Light blue background (above)
         label: "Scheduled",
         chipColor: "primary" as const
       };
     case "posted":
       return {
         icon: <CheckCircleOutlined sx={{ fontSize: 14 }} />,
-        color: "#4caf50" as const,
-        bgColor: "#e8f5e8",
+        color: "#27ae60" as const, // Green for posted
+        bgColor: "#d2f8eb", // Light green background (above)
         label: "Posted",
         chipColor: "success" as const
       };
