@@ -15,10 +15,12 @@ import {getUnansweredQuestionsApi} from "./services/common/getUnansweredQuestion
 import { addQuestionApi } from "./services/common/addQuestion";
 import { getQuestionsApi } from "./services/common/getQuestionsApi";
 import { editQuestionApi } from "./services/common/editQuestion";
+import authReducer from "./services/auth/authSlice";
 
 export const store = configureStore({
   reducer: {
     submenu: submenuReducer,
+    auth: authReducer,
     [authApi.reducerPath]: authApi.reducer,
     [projectsApi.reducerPath]: projectsApi.reducer,
     [refineApi.reducerPath]: refineApi.reducer,
@@ -34,7 +36,6 @@ export const store = configureStore({
     [addQuestionApi.reducerPath]: addQuestionApi.reducer,
     [getQuestionsApi.reducerPath]: getQuestionsApi.reducer,
     [editQuestionApi.reducerPath]: editQuestionApi.reducer,
-    
   },
 
   middleware: (getDefaultMiddleware) =>

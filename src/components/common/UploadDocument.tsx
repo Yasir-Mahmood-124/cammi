@@ -24,18 +24,24 @@ const UploadDocument: React.FC<UploadDocumentProps> = ({
   const [isUploading, setIsUploading] = useState<boolean>(false);
 
   // Connect to WebSocket on mount
-  useEffect(() => {
-    wsClient.connect(wsUrl);
+useEffect(() => {
+  wsClient.connect(wsUrl);
 
-    wsClient.onMessage((data: any) => {
-      console.log("WebSocket response received:", data); // Log the response
-      if (onUploadComplete) {
-        onUploadComplete(data.questions || []);
-      }
-      // Stop loader once response received
+  wsClient.onMessage((data: any) => {
+    console.log("WebSocket response received:", data);
+
+    if (onUploadComplete) {
+      onUploadComplete(data); // send full response
+    }
+
+    if (data.status === "processing_complete") {
       setIsUploading(false);
-    });
-  }, [wsUrl, onUploadComplete]);
+    }
+  });
+}, [wsUrl, onUploadComplete]);
+
+
+
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0) return;
@@ -103,6 +109,7 @@ const UploadDocument: React.FC<UploadDocumentProps> = ({
       session_id,
       project_id,
       text: fileText,
+      document_type
     };
 
     console.log("Uploading document...", payload);

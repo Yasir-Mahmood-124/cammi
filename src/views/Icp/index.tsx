@@ -86,16 +86,40 @@ const Icp: React.FC<IcpProps> = ({
   }, [selection, unansweredData, workflowState]);
 
   // Handle upload completion (YES flow)
-  const handleUploadComplete = (questions: string[]) => {
-    if (questions.length > 0) {
-      // Has questions from WebSocket - show user input
-      setQuestionsForInput(questions);
-      setWorkflowState('user-input');
+  // const handleUploadComplete = (questions: string[]) => {
+  //   if (questions.length > 0) {
+  //     // Has questions from WebSocket - show user input
+  //     setQuestionsForInput(questions);
+  //     setWorkflowState('user-input');
+  //   } else {
+  //     // No questions from WebSocket - go directly to final preview
+  //     setWorkflowState('final-preview');
+  //   }
+  // };
+
+// Handle upload completion (YES flow)
+const handleUploadComplete = (response: any) => {
+  if (response.status === "questions_need_answers" && response.not_found_questions?.length > 0) {
+    // Explicit unanswered questions step
+    const questions = response.not_found_questions.map((q: any) => q.question);
+    setQuestionsForInput(questions);
+    setWorkflowState("user-input");
+  } else if (response.status === "processing_complete") {
+    // Check if processing results still contain unanswered ("Not Found") answers
+    const unanswered = Object.entries(response.results || {})
+      .filter(([_, answer]) => answer === "Not Found")
+      .map(([question]) => question);
+
+    if (unanswered.length > 0) {
+      setQuestionsForInput(unanswered);
+      setWorkflowState("user-input");
     } else {
-      // No questions from WebSocket - go directly to final preview
-      setWorkflowState('final-preview');
+      setWorkflowState("final-preview");
     }
-  };
+  }
+};
+
+
 
   // Handle user input completion
   const handleUserInputClose = () => {

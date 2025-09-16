@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/redux/Providers"; // redux provider
 import { ThemeRegistry } from "@/theme/ThemeRegistry"; // mui theme provider
+import AppWrapper from "./AppWrapper"; // authentication wrapper
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <Providers>
-          <ThemeRegistry>{children}</ThemeRegistry>
+          <ThemeRegistry>
+            <AppWrapper>{children}</AppWrapper>
+          </ThemeRegistry>
         </Providers>
       </body>
     </html>

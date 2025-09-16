@@ -28,42 +28,54 @@ import {
  
 import Gtm from "@/views/Gtm";
 import Icp from "@/views/Icp";
+import Kmf from "@/views/kmf";
+import Sr from "@/views/sr";
+import Bs from "@/views/Bs";
+import Linkdin from "@/views/linkedin";
+import EventsComponent from "@/views/events";
  
 const GeneralStragicDocument = ({ onBack }: { onBack: () => void }) => (
-  <Box sx={{ p: 4 }}>
-    <Button variant="outlined" onClick={onBack} sx={{ mb: 2 }}>
-      ← Back to Dashboard
-    </Button>
+  <Box sx={{ p: 0 }}>
     <Gtm />
   </Box>
 );
  
 const IdealCustomerProfile = ({ onBack }: { onBack: () => void }) => (
-  <Box sx={{ p: 4 }}>
+  <Box sx={{ p: 0 }}>
     <Icp />
   </Box>
 );
  
 const StrategicRoadmap = ({ onBack }: { onBack: () => void }) => (
-  <Box sx={{ p: 4 }}>
-    <Typography variant="h4">Strategic Roadmap</Typography>
+  <Box sx={{ p: 0 }}>
+    <Sr />
   </Box>
 );
  
 const MessagingFramework = ({ onBack }: { onBack: () => void }) => (
-  <Box sx={{ p: 4 }}>
-    <Typography variant="h4">Messaging Framework from Welcome</Typography>
+  <Box sx={{ p: 0 }}>
+    <Kmf />
   </Box>
 );
  
-const BrandIdentity = ({ onBack }: { onBack: () => void }) => (
-  <Box sx={{ p: 4 }}>
-    <Typography variant="h4">Brand Identity</Typography>
+const BrandStartegy = ({ onBack }: { onBack: () => void }) => (
+  <Box sx={{ p: 0 }}>
+    <Bs />
   </Box>
 );
  
+const LinkedIn = ({ onBack }: { onBack: () => void }) => (
+  <Box sx={{ p: 0 }}>
+    <Linkdin />
+  </Box>
+);
+const Events = ({ onBack }: { onBack: () => void }) => (
+  <Box sx={{ p: 0 }}>
+    <EventsComponent />
+  </Box>
+);
 const Budget = ({ onBack }: { onBack: () => void }) => (
-  <Box sx={{ p: 4 }}>
+  <Box sx={{ p: 0 }}>
     <Typography variant="h4">Budget</Typography>
   </Box>
 );
@@ -89,7 +101,7 @@ const DashboardWelcome: React.FC = () => {
   const sidebarData = [
     {
       label: "Clarify",
-      key: "clarity",
+      key: "clarify",
       children: [
         { key: "gtm", label: "GTM Document" },
         { key: "icp", label: "Ideal Customer Profile" },
@@ -143,16 +155,27 @@ const DashboardWelcome: React.FC = () => {
             onBack={() => dispatch(setSubmenuClicked(null))}
           />
         );
+      case "sr":
+        return (
+          <StrategicRoadmap onBack={() => dispatch(setSubmenuClicked(null))} />
+        );
+ 
       case "kmf":
         return (
           <MessagingFramework
             onBack={() => dispatch(setSubmenuClicked(null))}
           />
         );
-      case "bi":
+      case "bs":
         return (
-          <BrandIdentity onBack={() => dispatch(setSubmenuClicked(null))} />
+          <BrandStartegy onBack={() => dispatch(setSubmenuClicked(null))} />
         );
+ 
+      case "linkedin":
+        return <LinkedIn onBack={() => dispatch(setSubmenuClicked(null))} />;
+ 
+      case "events":
+        return <Events onBack={() => dispatch(setSubmenuClicked(null))} />;
       case "budget":
         return <Budget onBack={() => dispatch(setSubmenuClicked(null))} />;
       default:

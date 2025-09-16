@@ -30,14 +30,14 @@ interface UserInputProps {
 const qaList: QAItem[] = [
   { question: "What do you want to accomplish in one year?" },
   { question: "Where do you want to be in three years?" },
-  // { question: "Where is your short term focus?" },
-  // { question: "Tell us about your business?" },
-  // { question: "Tell us about who you sell to? Where are they located?" },
-  // { question: "What is unique about your business?" },
-  // { question: "What marketing tools do you have available to you?" },
-  // { question: "Who do you think are your biggest competitors?" },
-  // { question: "What are your strengths, weaknesses, opps and threats?" },
-  // { question: "Tell us about your product/solution/ service?" },
+  { question: "Where is your short term focus?" },
+  { question: "Tell us about your business?" },
+  { question: "Tell us about who you sell to? Where are they located?" },
+  { question: "What is unique about your business?" },
+  { question: "What marketing tools do you have available to you?" },
+  { question: "Who do you think are your biggest competitors?" },
+  { question: "What are your strengths, weaknesses, opps and threats?" },
+  { question: "Tell us about your product/solution/ service?" },
 ];
 
 const UserInput: React.FC<UserInputProps> = ({ onUpdateQuestions, onDialogClose }) => {

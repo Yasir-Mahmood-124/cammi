@@ -26,10 +26,14 @@ const submenuSlice = createSlice({
         state.clicked = stored ? stored : null;
       }
     },
+    clearSubmenu: (state) => {
+      state.clicked = null;
+      localStorage.removeItem("subMenuclicked");
+    },
   },
 });
  
-export const { setSubmenuClicked, loadSubmenuFromStorage } =
+export const { setSubmenuClicked, loadSubmenuFromStorage, clearSubmenu } =
   submenuSlice.actions;
  
 export default submenuSlice.reducer;
