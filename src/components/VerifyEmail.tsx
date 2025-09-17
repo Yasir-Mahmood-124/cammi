@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import BackgroundImg from "@/assests/images/background.png";
-import VerifyEmailBg from "@/assests/images/verifyEmailBg.png";
+import VerifyEmailBg from "@/assests/images/VerifyEmailBg.png";
 import LogoImg from "@/assests/images/Logo.png";
 import GradientButton from "@/components/common/GradientButton";
 import CustomSnackbar from "@/components/common/CustomSnackbar";
