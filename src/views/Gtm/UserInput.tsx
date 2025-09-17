@@ -111,10 +111,16 @@ const UserInput: React.FC<UserInputProps> = ({ onUpdateQuestions, onDialogClose 
     try {
       setTypingText("");
       setShowActions(false);
-      const response = await refine({ prompt: inputValue }).unwrap();
+
+      // 🔹 Concatenate the question with the user's input
+      const fullPrompt = `${qaList[step].question} ${inputValue}`;
+
+      const response = await refine({ prompt: fullPrompt }).unwrap();
+
       setAnswers((prev) =>
         prev.map((ans, idx) => (idx === step ? response.groq_response : ans))
       );
+
       setIsTyping(true);
       setInputValue("");
     } catch (err) {

@@ -124,16 +124,24 @@ const UserInput: React.FC<UserInputProps> = ({
         try {
             setTypingText("");
             setShowActions(false);
-            const response = await refine({ prompt: inputValue }).unwrap();
+
+            // 🔹 Concatenate the question with the user's input
+            const currentQuestion = questions[step];
+            const fullPrompt = `${currentQuestion} ${inputValue}`;
+
+            const response = await refine({ prompt: fullPrompt }).unwrap();
+
             setAnswers((prev) =>
                 prev.map((ans, idx) => (idx === step ? response.groq_response : ans))
             );
+
             setIsTyping(true);
             setInputValue("");
         } catch (err) {
             console.error("Error refining prompt:", err);
         }
     };
+
 
     const handleAnswerChange = (idx: number, value: string) => {
         setAnswers((prev) => prev.map((ans, i) => (i === idx ? value : ans)));

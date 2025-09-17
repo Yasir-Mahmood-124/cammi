@@ -380,24 +380,6 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({
             {/* Progress + Typing effect */}
             {wsActive && (
                 <Box sx={{ mt: 2 }}>
-                    {/* ✅ Progress bar */}
-                    <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" sx={{ mb: 0.5 }}>
-                            Generating Document...
-                        </Typography>
-                        <LinearProgress
-                            variant="determinate"
-                            value={progress}
-                            sx={{ height: 10, borderRadius: 5 }}
-                        />
-                        <Typography
-                            variant="caption"
-                            sx={{ mt: 1, display: "block", textAlign: "right" }}
-                        >
-                            {progress.toFixed(0)}%
-                        </Typography>
-                    </Box>
-
                     {/* ✅ Typed messages */}
                     <Box
                         sx={{
@@ -413,8 +395,27 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({
                     >
                         {displayedContent}
                     </Box>
+
+                    {/* ✅ Progress bar at the bottom */}
+                    <Box sx={{ mt: 2 }}>
+                        <Typography variant="body2" sx={{ mb: 0.5 }}>
+                            Generating Document...
+                        </Typography>
+                        <LinearProgress
+                            variant="determinate"
+                            value={progress}
+                            sx={{ height: 10, borderRadius: 5 }}
+                        />
+                        <Typography
+                            variant="caption"
+                            sx={{ mt: 1, display: "block", textAlign: "right" }}
+                        >
+                            {progress.toFixed(0)}%
+                        </Typography>
+                    </Box>
                 </Box>
             )}
+
 
             {/* Final message */}
             {docReady && (
