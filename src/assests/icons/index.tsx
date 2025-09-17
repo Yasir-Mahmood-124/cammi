@@ -4,8 +4,8 @@ import Refresh from "./refresh.svg";
 import GenerateCammi from "./GenerateCammi.svg";
 
 export{
-    Blue,
+    // Blue,
     Panle,
-    Refresh,
+    // Refresh,
     GenerateCammi,
 }
