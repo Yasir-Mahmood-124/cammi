@@ -135,13 +135,13 @@ export default function DashboardPage() {
       const token = Cookies.get("token");
       if (!token) throw new Error("No token found");
 
-      localStorage.removeItem("currentProject");
-      localStorage.removeItem("linkedin_sub");
-
       dispatch(clearSubmenu());
 
       await logoutApi({ token }).unwrap();
       Cookies.remove("token");
+      localStorage.removeItem("currentProject");
+      localStorage.removeItem("linkedin_sub");
+      localStorage.removeItem("subMenuclicked");
       router.push("/login");
     } catch (error) {
       console.error("Logout failed", error);
