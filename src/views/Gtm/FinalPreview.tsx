@@ -7,6 +7,7 @@ import {
     Card,
     IconButton,
     Button,
+    LinearProgress, 
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
@@ -45,6 +46,8 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
     const [displayedContent, setDisplayedContent] = useState("");
     const pendingQueue = useRef<string[]>([]);
     const typingInterval = useRef<NodeJS.Timeout | null>(null);
+
+    const [progress, setProgress] = useState<number>(0);
 
     // Autofocus when editing
     useEffect(() => {
@@ -126,9 +129,15 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                 `wss://4iqvtvmxle.execute-api.us-east-1.amazonaws.com/prod/?session_id=${savedToken}`
             );
 
-            ws.onmessage = (event) => {
+             ws.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
+
+                    // ✅ Handle progress updates
+                    if (message.action === "sendMessage" && typeof message.body === "number") {
+                        setProgress(message.body);
+                        return;
+                    }
 
                     if (
                         message.type === "tier_completion" &&
@@ -155,6 +164,7 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                         ws.close();
                         setWsActive(false);
                         setDocReady(true);
+                        setProgress(100); // ✅ ensure full
                     }
                 } catch (err) {
                     console.error("❌ Failed parsing WS message", err);
@@ -319,24 +329,44 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
                 </>
             )}
 
-            {/* 🔹 Typing effect */}
-            {wsActive && (
-                <Box
-                    sx={{
-                        mt: 2,
-                        p: 2,
-                        bgcolor: "#fff",
-                        borderRadius: 2,
-                        minHeight: "200px",
-                        whiteSpace: "pre-line",
-                        fontSize: "14px",
-                        lineHeight: 1.5,
-                        fontFamily: "monospace",
-                    }}
-                >
-                    {displayedContent}
-                </Box>
-            )}
+             {/* Progress + Typing effect */}
+                        {wsActive && (
+                            <Box sx={{ mt: 2 }}>
+                                {/* ✅ Typed messages */}
+                                <Box
+                                    sx={{
+                                        p: 2,
+                                        bgcolor: "#fff",
+                                        borderRadius: 2,
+                                        minHeight: "200px",
+                                        whiteSpace: "pre-line",
+                                        fontSize: "14px",
+                                        lineHeight: 1.5,
+                                        fontFamily: "monospace",
+                                    }}
+                                >
+                                    {displayedContent}
+                                </Box>
+            
+                                {/* ✅ Progress bar at the bottom */}
+                                <Box sx={{ mt: 2 }}>
+                                    <Typography variant="body2" sx={{ mb: 0.5 }}>
+                                        Generating Document...
+                                    </Typography>
+                                    <LinearProgress
+                                        variant="determinate"
+                                        value={progress}
+                                        sx={{ height: 10, borderRadius: 5 }}
+                                    />
+                                    <Typography
+                                        variant="caption"
+                                        sx={{ mt: 1, display: "block", textAlign: "right" }}
+                                    >
+                                        {progress.toFixed(0)}%
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        )}
 
             {/* 🔹 Final message */}
             {docReady && (
