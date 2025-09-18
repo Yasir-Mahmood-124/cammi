@@ -16,6 +16,7 @@ import { addQuestionApi } from "./services/common/addQuestion";
 import { getQuestionsApi } from "./services/common/getQuestionsApi";
 import { editQuestionApi } from "./services/common/editQuestion";
 import authReducer from "./services/auth/authSlice";
+import { fetchSchedulePostApi } from "./services/linkedin/fetchSchedulePostApi";
 
 export const store = configureStore({
   reducer: {
@@ -36,6 +37,7 @@ export const store = configureStore({
     [addQuestionApi.reducerPath]: addQuestionApi.reducer,
     [getQuestionsApi.reducerPath]: getQuestionsApi.reducer,
     [editQuestionApi.reducerPath]: editQuestionApi.reducer,
+    [fetchSchedulePostApi.reducerPath]: fetchSchedulePostApi.reducer,
   },
 
   middleware: (getDefaultMiddleware) =>
@@ -56,6 +58,7 @@ export const store = configureStore({
         addQuestionApi.middleware,
         getQuestionsApi.middleware,
         editQuestionApi.middleware,
+        fetchSchedulePostApi.middleware
       ),
 });
 

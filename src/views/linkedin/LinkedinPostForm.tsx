@@ -198,34 +198,41 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
     }
   };
 
-  const handleSchedule = async () => {
-    try {
-      const payload = await buildPayload();
-      if (!payload || !scheduledDateTime) return;
+ const handleSchedule = async () => {
+  try {
+    const payload = await buildPayload();
+    if (!payload || !scheduledDateTime) return;
 
-      await schedulePost({
-        ...payload,
-        scheduled_time: scheduledDateTime.toISOString(),
-      }).unwrap();
+    // add +5 hours (PKT offset)
+    const pktDate = new Date(scheduledDateTime.toDate().getTime() + 5 * 60 * 60 * 1000);
 
-      setSnackbar({
-        open: true,
-        severity: "success",
-        message: "Your post has been scheduled successfully!",
-        icon: <Schedule />,
-      });
-      setMessage("");
-      setScheduledDateTime(null);
-      handleScheduleClose();
-      clearAllImages();
-    } catch {
-      setSnackbar({
-        open: true,
-        severity: "error",
-        message: "An error occurred while scheduling your post",
-      });
-    }
-  };
+    await schedulePost({
+      ...payload,
+      scheduled_time: pktDate.toISOString(),
+    }).unwrap();
+
+    console.log("Scheduled Post Payload:", payload);
+    console.log("Scheduled Time (PKT):", pktDate.toISOString());
+
+    setSnackbar({
+      open: true,
+      severity: "success",
+      message: "Your post has been scheduled successfully!",
+      icon: <Schedule />,
+    });
+    setMessage("");
+    setScheduledDateTime(null);
+    handleScheduleClose();
+    clearAllImages();
+  } catch {
+    setSnackbar({
+      open: true,
+      severity: "error",
+      message: "An error occurred while scheduling your post",
+    });
+  }
+};
+
 
   const handleAIGenerate = async () => {
     try {

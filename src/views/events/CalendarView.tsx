@@ -12,14 +12,14 @@ import {
   CardContent,
   Badge,
 } from "@mui/material";
-import { 
-  CheckCircleOutlined, 
-  ScheduleOutlined, 
+import {
+  CheckCircleOutlined,
   SendOutlined,
   CalendarTodayOutlined,
   AccessTimeOutlined,
-  MessageOutlined
 } from "@mui/icons-material";
+import { useFetchSchedulePostMutation } from "@/redux/services/linkedin/fetchSchedulePostApi";
+import ImageDialog from "./ImageDialog";
 
 interface Post {
   id: string;
@@ -35,7 +35,15 @@ interface CalendarViewProps {
 
 // 24-hour slots
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 const DAY_ABBREVIATIONS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const formatHour = (hour: number) => {
@@ -58,43 +66,36 @@ const formatDateTime = (dateString: string) => {
   return {
     date: `${day}/${month}/${year}`,
     time: `${hour12}:${minutes} ${ampm}`,
-    fullDateTime: `${day}/${month}/${year} ${hour12}:${minutes} ${ampm}`
+    fullDateTime: `${day}/${month}/${year} ${hour12}:${minutes} ${ampm}`,
   };
 };
 
 const getStatusConfig = (status: string) => {
-  switch (status) {
-    case "pending":
-      return {
-        icon: <ScheduleOutlined sx={{ fontSize: 14 }} />,
-        color: "#e67e22" as const, // Orange for pending
-        bgColor: "#f9e0ce", // Light orange background
-        label: "Pending",
-        chipColor: "warning" as const
-      };
+  const normalizedStatus = status === "pending" ? "scheduled" : status;
+  switch (normalizedStatus) {
     case "scheduled":
       return {
         icon: <SendOutlined sx={{ fontSize: 14 }} />,
         color: "#3498db" as const, // Blue for scheduled
-        bgColor: "#c3d7ff", // Light blue background (above)
+        bgColor: "#c3d7ff", // Light blue background
         label: "Scheduled",
-        chipColor: "primary" as const
+        chipColor: "primary" as const,
       };
     case "posted":
       return {
         icon: <CheckCircleOutlined sx={{ fontSize: 14 }} />,
         color: "#27ae60" as const, // Green for posted
-        bgColor: "#d2f8eb", // Light green background (above)
+        bgColor: "#d2f8eb", // Light green background
         label: "Posted",
-        chipColor: "success" as const
+        chipColor: "success" as const,
       };
     default:
       return {
-        icon: <ScheduleOutlined sx={{ fontSize: 14 }} />,
+        icon: <SendOutlined sx={{ fontSize: 14 }} />,
         color: "#757575" as const,
         bgColor: "#f5f5f5",
         label: "Unknown",
-        chipColor: "default" as const
+        chipColor: "default" as const,
       };
   }
 };
@@ -112,6 +113,29 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
     postsMap[day][hour].push(post);
   });
 
+  const [fetchSchedulePost, { data, error, isLoading }] =
+    useFetchSchedulePostMutation();
+
+  const handlePostClick = (post: Post) => {
+    if (post.status !== "pending") {
+      return; // only allow scheduled posts (blue box) to open the dialog
+    }
+
+    const sub = localStorage.getItem("linkedin_sub");
+    if (!sub) {
+      console.error("No linkedin_sub found in localStorage");
+      return;
+    }
+
+    fetchSchedulePost({
+      sub,
+      post_time: post.post_time, // or post.schedule_time depending on your API
+    });
+    setDialogOpen(true);
+  };
+
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+
   return (
     <Paper
       elevation={0}
@@ -119,7 +143,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
         p: 3,
         width: "100%",
         height: "100%",
-        // Remove overflow auto and replace with hidden to prevent scrollbars
         overflow: "hidden",
         boxSizing: "border-box",
         bgcolor: "#fafafa",
@@ -129,7 +152,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
         flexDirection: "column",
       }}
     >
-      {/* Enhanced Header Section */}
+      {/* Header Section */}
       <Box
         sx={{
           display: "flex",
@@ -138,37 +161,37 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
           mb: 4,
           pb: 2,
           borderBottom: "1px solid #e0e0e0",
-          flexShrink: 0, // Prevent header from shrinking
+          flexShrink: 0,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <CalendarTodayOutlined 
-            sx={{ 
-              fontSize: 28, 
+          <CalendarTodayOutlined
+            sx={{
+              fontSize: 28,
               color: "#1976d2",
               background: "linear-gradient(135deg, #1976d2, #42a5f5)",
               WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent"
-            }} 
+              WebkitTextFillColor: "transparent",
+            }}
           />
           <Typography
             variant="h4"
-            sx={{ 
-              fontWeight: 600, 
+            sx={{
+              fontWeight: 600,
               color: "#1a1a1a",
-              letterSpacing: "-0.5px"
+              letterSpacing: "-0.5px",
             }}
           >
             Event Calendar
           </Typography>
         </Box>
 
-        {/* Enhanced Legend */}
+        {/* Legend */}
         <Stack direction="row" spacing={2} alignItems="center">
           <Typography variant="body2" sx={{ color: "#666", fontWeight: 500 }}>
             Status:
           </Typography>
-          {["pending", "scheduled", "posted"].map((status) => {
+          {["scheduled", "posted"].map((status) => {
             const config = getStatusConfig(status);
             return (
               <Chip
@@ -183,8 +206,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
                   fontSize: "0.75rem",
                   border: `1px solid ${config.color}20`,
                   "& .MuiChip-icon": {
-                    color: config.color
-                  }
+                    color: config.color,
+                  },
                 }}
               />
             );
@@ -192,42 +215,40 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
         </Stack>
       </Box>
 
-      {/* Calendar Container with proper overflow handling */}
+      {/* Calendar */}
       <Box
         sx={{
           flex: 1,
           overflow: "auto",
-          "&::-webkit-scrollbar": { 
-            width: 6, 
-            height: 6 
+          "&::-webkit-scrollbar": {
+            width: 6,
+            height: 6,
           },
           "&::-webkit-scrollbar-thumb": {
             bgcolor: "#bdbdbd",
             borderRadius: 3,
             "&:hover": {
-              bgcolor: "#9e9e9e"
-            }
+              bgcolor: "#9e9e9e",
+            },
           },
           "&::-webkit-scrollbar-track": {
             bgcolor: "#f5f5f5",
-            borderRadius: 3
-          }
+            borderRadius: 3,
+          },
         }}
       >
-        {/* Enhanced Calendar Grid */}
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "100px repeat(7, minmax(120px, 1fr))", // Fixed time column, flexible day columns
+            gridTemplateColumns: "100px repeat(7, minmax(120px, 1fr))",
             gap: "1px",
             bgcolor: "#e0e0e0",
             borderRadius: 2,
             overflow: "hidden",
             boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            minWidth: "fit-content", // Ensure grid doesn't shrink below content
+            minWidth: "fit-content",
           }}
         >
-          {/* Empty cell top-left */}
           <Box
             sx={{
               bgcolor: "#f8f9fa",
@@ -239,13 +260,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
               top: 0,
               left: 0,
               zIndex: 3,
-              borderBottom: "2px solid #e0e0e0"
+              borderBottom: "2px solid #e0e0e0",
             }}
           >
             <AccessTimeOutlined sx={{ color: "#666", fontSize: 18 }} />
           </Box>
 
-          {/* Enhanced Day headers */}
           {DAY_ABBREVIATIONS.map((day, index) => (
             <Box
               key={day}
@@ -259,35 +279,26 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
                 position: "sticky",
                 top: 0,
                 zIndex: 2,
-                borderBottom: "2px solid #e0e0e0"
+                borderBottom: "2px solid #e0e0e0",
               }}
             >
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  fontWeight: 600, 
-                  color: "#1a1a1a",
-                  fontSize: "0.8rem"
-                }}
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: 600, color: "#1a1a1a", fontSize: "0.8rem" }}
               >
                 {day}
               </Typography>
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  color: "#666",
-                  fontSize: "0.7rem"
-                }}
+              <Typography
+                variant="caption"
+                sx={{ color: "#666", fontSize: "0.7rem" }}
               >
                 {DAYS[index]}
               </Typography>
             </Box>
           ))}
 
-          {/* Enhanced Time slots */}
           {HOURS.map((hour) => (
             <React.Fragment key={hour}>
-              {/* Enhanced Time labels */}
               <Box
                 sx={{
                   bgcolor: "#f8f9fa",
@@ -298,7 +309,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
                   position: "sticky",
                   left: 0,
                   zIndex: 1,
-                  borderRight: "2px solid #e0e0e0"
+                  borderRight: "2px solid #e0e0e0",
                 }}
               >
                 <Typography
@@ -308,14 +319,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
                     color: "#666",
                     fontWeight: 500,
                     textAlign: "center",
-                    lineHeight: 1.2
+                    lineHeight: 1.2,
                   }}
                 >
                   {formatHour(hour)}
                 </Typography>
               </Box>
 
-              {/* Enhanced Day cells */}
               {DAY_ABBREVIATIONS.map((_, dayIndex) => {
                 const cellPosts = postsMap[dayIndex]?.[hour] || [];
 
@@ -330,10 +340,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
                       flexDirection: "column",
                       gap: 0.5,
                       transition: "background-color 0.2s ease",
-                      overflow: "hidden", // Prevent cell content from overflowing
-                      "&:hover": {
-                        bgcolor: "#f5f5f5",
-                      },
+                      overflow: "hidden",
+                      "&:hover": { bgcolor: "#f5f5f5" },
                     }}
                   >
                     <Stack spacing={0.5} sx={{ height: "100%" }}>
@@ -346,13 +354,22 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
                             key={post.id}
                             title={
                               <Box sx={{ p: 1 }}>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                <Typography
+                                  variant="subtitle2"
+                                  sx={{ fontWeight: 600, mb: 0.5 }}
+                                >
                                   {post.message}
                                 </Typography>
-                                <Typography variant="caption" sx={{ display: "block", opacity: 0.8 }}>
+                                <Typography
+                                  variant="caption"
+                                  sx={{ display: "block", opacity: 0.8 }}
+                                >
                                   📅 {date} ⏰ {time}
                                 </Typography>
-                                <Typography variant="caption" sx={{ display: "block", opacity: 0.8 }}>
+                                <Typography
+                                  variant="caption"
+                                  sx={{ display: "block", opacity: 0.8 }}
+                                >
                                   Status: {statusConfig.label}
                                 </Typography>
                               </Box>
@@ -362,32 +379,47 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
                           >
                             <Card
                               elevation={0}
+                              onClick={() => handlePostClick(post)}
                               sx={{
                                 bgcolor: statusConfig.bgColor,
                                 border: `1px solid ${statusConfig.color}30`,
                                 borderRadius: 1,
                                 cursor: "pointer",
                                 transition: "all 0.2s ease",
-                                minWidth: 0, // Allow card to shrink
+                                minWidth: 0,
                                 "&:hover": {
                                   transform: "translateY(-1px)",
                                   boxShadow: `0 2px 8px ${statusConfig.color}20`,
-                                  borderColor: `${statusConfig.color}60`
+                                  borderColor: `${statusConfig.color}60`,
                                 },
                               }}
                             >
-                              <CardContent sx={{ p: 1, "&:last-child": { pb: 1 } }}>
-                                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.5 }}>
-                                  <Box 
-                                    sx={{ 
+                              <CardContent
+                                sx={{ p: 1, "&:last-child": { pb: 1 } }}
+                              >
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "flex-start",
+                                    gap: 0.5,
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
                                       color: statusConfig.color,
                                       mt: 0.1,
-                                      flexShrink: 0 // Prevent icon from shrinking
+                                      flexShrink: 0,
                                     }}
                                   >
                                     {statusConfig.icon}
                                   </Box>
-                                  <Box sx={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+                                  <Box
+                                    sx={{
+                                      flex: 1,
+                                      minWidth: 0,
+                                      overflow: "hidden",
+                                    }}
+                                  >
                                     <Typography
                                       variant="caption"
                                       sx={{
@@ -395,7 +427,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
                                         color: "#666",
                                         fontWeight: 500,
                                         display: "block",
-                                        mb: 0.25
+                                        mb: 0.25,
                                       }}
                                     >
                                       {time}
@@ -412,20 +444,18 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
                                         WebkitBoxOrient: "vertical",
                                         overflow: "hidden",
                                         textOverflow: "ellipsis",
-                                        wordBreak: "break-word" // Handle long words
+                                        wordBreak: "break-word",
                                       }}
                                     >
                                       {post.message}
                                     </Typography>
                                   </Box>
                                 </Box>
-                                
-                                {/* Status indicator */}
-                                <Box 
-                                  sx={{ 
-                                    display: "flex", 
+                                <Box
+                                  sx={{
+                                    display: "flex",
                                     justifyContent: "flex-end",
-                                    mt: 0.5
+                                    mt: 0.5,
                                   }}
                                 >
                                   <Badge
@@ -436,8 +466,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
                                         fontSize: "0.55rem",
                                         height: 14,
                                         minWidth: 14,
-                                        borderRadius: 1
-                                      }
+                                        borderRadius: 1,
+                                      },
                                     }}
                                     badgeContent={statusConfig.label.charAt(0)}
                                   />
@@ -455,6 +485,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
           ))}
         </Box>
       </Box>
+
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="subtitle2">Fetched Post Data:</Typography>
+        <pre>{JSON.stringify(data, null, 2)}</pre>
+      </Box>
+
+      <ImageDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        data={data}
+      />
     </Paper>
   );
 };
