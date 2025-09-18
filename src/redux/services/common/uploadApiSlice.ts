@@ -6,7 +6,7 @@ export const uploadApiSlice = createApi({
   reducerPath: 'uploadApi',
   baseQuery: fetchBaseQuery({
     baseUrl: 'https://o3uzr46ro5.execute-api.us-east-1.amazonaws.com/cammi-dev/',
-    credentials: "include",
+    // credentials: "include",
   }),
   endpoints: (builder) => ({
     uploadTextFile: builder.mutation({
