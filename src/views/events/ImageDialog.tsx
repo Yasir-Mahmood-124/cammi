@@ -74,68 +74,15 @@ const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, data }) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-const handleEditClick = async () => {
-  if (!data?.scheduled_time) return;
-
-  // 👇 safely get sub from localStorage
-  const sub =
-    typeof window !== "undefined"
-      ? localStorage.getItem("linkedin_sub")
-      : null;
-
-  if (!sub) {
-    console.error("linkedin_sub not found in localStorage");
-    return;
+  function toBackendFormat(date: Date | any): string {
+    return date
+      .toDate() // if it's a dayjs/Moment object, convert → JS Date
+      .toISOString()
+      .replace(/\.\d{3}Z$/, "+00:00"); // strip ms + force +00:00
   }
 
-  // Original post time from backend (this identifies the post to edit)
-  const originalPostTime = data.scheduled_time;
-
-  // New scheduled time (if user changed it, otherwise keep same as original)
-  const isoScheduledTime = scheduledTime
-    ? new Date(scheduledTime).toISOString()
-    : data.scheduled_time;
-
-  // Build new_values exactly as backend expects
-  const newValues: Record<string, any> = {
-    status: "pending", // always required
-    scheduled_time: isoScheduledTime,
-  };
-
-  if (message) newValues.message = message;
-  if (images && images.length > 0) newValues.image_keys = images;
-
-  try {
-    const response = await editDelete({
-      sub,
-      post_time: originalPostTime, // ✅ must be the original scheduled_time from backend
-      action: "edit",
-      new_values: newValues,
-    }).unwrap();
-
-    console.log("Payload sent:", {
-      sub,
-      post_time: originalPostTime,
-      action: "edit",
-      new_values: newValues,
-    });
-
-    console.log("Edit response:", response);
-
-    if (response.success) {
-      onClose();
-    } else {
-      console.error("Edit failed:", response.error);
-    }
-  } catch (error) {
-    console.error("API Error editing post:", error);
-  }
-};
-
-
-
-  const handleDeleteClick = async () => {
-    if (!data?.scheduled_time || !data) return;
+  const handleEditClick = async () => {
+    if (!data?.scheduled_time) return;
 
     // 👇 safely get sub from localStorage
     const sub =
@@ -148,10 +95,67 @@ const handleEditClick = async () => {
       return;
     }
 
+    // Original post time (identifier)
+    const originalPostTime = data.scheduled_time;
+
+    // New scheduled time (formatted exactly as backend wants)
+    const isoScheduledTime = scheduledTime
+      ? toBackendFormat(new Date(scheduledTime))
+      : data.scheduled_time;
+
+    // Build new_values
+    const newValues: Record<string, any> = {
+      status: "pending",
+      scheduled_time: isoScheduledTime,
+    };
+
+    if (message) newValues.message = message;
+    if (images && images.length > 0) newValues.image_keys = images;
+
     try {
       const response = await editDelete({
-        sub, // ✅ taken from localStorage
-        post_time: data.scheduled_time,
+        sub,
+        post_time: originalPostTime, // keep original
+        action: "edit",
+        new_values: newValues,
+      }).unwrap();
+
+      console.log("Payload sent:", {
+        sub,
+        post_time: originalPostTime,
+        action: "edit",
+        new_values: newValues,
+      });
+
+      console.log("Edit response:", response);
+
+      if (response.success) {
+        onClose();
+      } else {
+        console.error("Edit failed:", response.error);
+      }
+    } catch (error) {
+      console.error("API Error editing post:", error);
+    }
+  };
+
+  const handleDeleteClick = async () => {
+    if (!data?.scheduled_time || !data) return;
+
+    const sub =
+      typeof window !== "undefined"
+        ? localStorage.getItem("linkedin_sub")
+        : null;
+
+    if (!sub) {
+      console.error("linkedin_sub not found in localStorage");
+      return;
+    }
+
+    try {
+      const response = await editDelete({
+        sub,
+        post_time: data.scheduled_time, // already in backend format
         action: "delete",
       }).unwrap();
 
