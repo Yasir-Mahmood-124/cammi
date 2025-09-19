@@ -74,11 +74,11 @@ const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, data }) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  function toBackendFormat(date: Date | any): string {
-    return date
-      .toDate() // if it's a dayjs/Moment object, convert → JS Date
-      .toISOString()
-      .replace(/\.\d{3}Z$/, "+00:00"); // strip ms + force +00:00
+  function toBackendFormat(date: any): string {
+    // If it's a Day.js/Moment object → convert to JS Date
+    const jsDate = typeof date.toDate === "function" ? date.toDate() : date;
+
+    return jsDate.toISOString().replace(/\.\d{3}Z$/, "+00:00"); // match your exact format
   }
 
   const handleEditClick = async () => {
@@ -131,6 +131,7 @@ const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, data }) => {
 
       if (response.success) {
         onClose();
+        window.location.reload();
       } else {
         console.error("Edit failed:", response.error);
       }
@@ -166,6 +167,7 @@ const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, data }) => {
         setScheduledTime("");
         setImages([]);
         onClose();
+        window.location.reload();
       } else {
         console.error("Delete failed:", response.error);
       }
