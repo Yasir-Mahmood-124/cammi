@@ -109,7 +109,8 @@ const handleEditClick = async () => {
       action: "edit",
       new_values: newValues,
     }).unwrap();
-
+    console.log("New Values Sent:", newValues);
+    
     console.log("Edit response:", response);
 
     if (response.success) {
