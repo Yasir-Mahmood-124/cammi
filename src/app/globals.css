@@ -25,6 +25,13 @@ body {
   overflow-x: hidden;
 }
 
+html {
+  transform: scale(0.9);  /* 90% zoom out */
+  transform-origin: top left;
+  width: 111%; /* compensate for shrink */
+}
+
+
 body {
   color: var(--foreground);
   background: var(--background);
