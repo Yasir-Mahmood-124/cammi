@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useCallback, useEffect } from "react";
 import { Box } from "@mui/material";
+import type { AlertColor } from "@mui/material/Alert";
 import DocumentSelector from "@/components/common/documentSelector";
 import UploadDocument from "@/components/common/UploadDocument";
 import GradientCard from "@/components/common/GradientCard";
@@ -9,17 +10,15 @@ import { useGetQuestionsQuery } from "@/redux/services/common/getQuestionsApi";
 import UserInput from ".././Icp/UserInput";
 import VerticalQuestions from ".././Icp/VerticalQuestions";
 import FinalPreview, { QAItem } from ".././Icp/FinalPreview";
+import CustomSnackbar from "@/components/common/CustomSnackbar";
 
 interface BsProps {
   document_type?: string;
   wsUrl?: string;
 }
 
-type WorkflowState =
-  | "selection"
-  | "upload"
-  | "user-input"
-  | "final-preview";
+// Define workflow states
+type WorkflowState = "selection" | "upload" | "user-input" | "final-preview";
 
 const Bs: React.FC<BsProps> = ({
   document_type = "bs",
@@ -32,6 +31,12 @@ const Bs: React.FC<BsProps> = ({
   const [previousQuestions, setPreviousQuestions] = useState<string[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
 
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "info" as AlertColor,
+  });
+
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
   const storedProject =
@@ -41,6 +46,7 @@ const Bs: React.FC<BsProps> = ({
   const project = storedProject ? JSON.parse(storedProject) : null;
   const project_id = project?.project_id;
 
+  // Get unanswered questions (NO flow)
   const {
     data: unansweredData,
     error: unansweredError,
@@ -50,6 +56,7 @@ const Bs: React.FC<BsProps> = ({
     { skip: selection !== "no" || !project_id }
   );
 
+  // Get all questions (final preview)
   const {
     data: fullQuestionsData,
     isLoading: fullLoading,
@@ -86,12 +93,45 @@ const Bs: React.FC<BsProps> = ({
     }
   }, [selection, unansweredData, workflowState]);
 
-  const handleUploadComplete = (questions: string[]) => {
-    if (questions.length > 0) {
+  const handleUploadComplete = (response: any) => {
+    if (
+      response.status === "questions_need_answers" &&
+      response.not_found_questions?.length > 0
+    ) {
+      const questions = response.not_found_questions.map(
+        (q: any) => q.question
+      );
       setQuestionsForInput(questions);
       setWorkflowState("user-input");
-    } else {
-      setWorkflowState("final-preview");
+
+      setSnackbar({
+        open: true,
+        severity: "warning",
+        message: "Some questions need your input!",
+      });
+    } else if (response.status === "processing_complete") {
+      const unanswered = Object.entries(response.results || {})
+        .filter(([_, answer]) => answer === "Not Found")
+        .map(([question]) => question);
+
+      if (unanswered.length > 0) {
+        setQuestionsForInput(unanswered);
+        setWorkflowState("user-input");
+
+        setSnackbar({
+          open: true,
+          severity: "warning",
+          message: "Some answers are missing. Please fill them in.",
+        });
+      } else {
+        setWorkflowState("final-preview");
+
+        setSnackbar({
+          open: true,
+          severity: "success",
+          message: "All questions answered! Ready for preview.",
+        });
+      }
     }
   };
 
@@ -187,7 +227,7 @@ const Bs: React.FC<BsProps> = ({
     >
       <GradientCard
         heading="BS Document Generation"
-        content="A structured framework to capture all key elements for a business strategy."
+        content="A framework designed for structured and business-specific documentation."
       />
 
       {workflowState === "selection" && (
@@ -254,6 +294,13 @@ const Bs: React.FC<BsProps> = ({
           )}
         </Box>
       )}
+
+      <CustomSnackbar
+        open={snackbar.open}
+        severity={snackbar.severity}
+        message={snackbar.message}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      />
     </Box>
   );
 };

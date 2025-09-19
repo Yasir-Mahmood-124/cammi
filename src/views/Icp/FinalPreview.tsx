@@ -162,7 +162,7 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({
             console.log("✅ File uploaded successfully");
 
             setWsActive(true);
-            setDisplayedContent("Waiting for WebSocket messages...");
+            setDisplayedContent("Waiting for Document Generation...");
             setDocReady(false);
             setProgress(0); // ✅ reset progress
 

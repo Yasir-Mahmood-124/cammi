@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useCallback, useEffect } from "react";
 import { Box } from "@mui/material";
+import type { AlertColor } from "@mui/material/Alert";
 import DocumentSelector from "@/components/common/documentSelector";
 import UploadDocument from "@/components/common/UploadDocument";
 import GradientCard from "@/components/common/GradientCard";
@@ -9,6 +10,7 @@ import { useGetQuestionsQuery } from "@/redux/services/common/getQuestionsApi";
 import UserInput from ".././Icp/UserInput";
 import VerticalQuestions from ".././Icp/VerticalQuestions";
 import FinalPreview, { QAItem } from ".././Icp/FinalPreview";
+import CustomSnackbar from "@/components/common/CustomSnackbar";
 
 interface KmfProps {
   document_type?: string;
@@ -16,11 +18,7 @@ interface KmfProps {
 }
 
 // Define workflow states
-type WorkflowState =
-  | "selection"
-  | "upload"
-  | "user-input"
-  | "final-preview";
+type WorkflowState = "selection" | "upload" | "user-input" | "final-preview";
 
 const Kmf: React.FC<KmfProps> = ({
   document_type = "kmf",
@@ -32,6 +30,12 @@ const Kmf: React.FC<KmfProps> = ({
   const [questionsForInput, setQuestionsForInput] = useState<string[]>([]);
   const [previousQuestions, setPreviousQuestions] = useState<string[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
+
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "info" as AlertColor,
+  });
 
   // Edit state for FinalPreview
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -71,7 +75,8 @@ const Kmf: React.FC<KmfProps> = ({
     if (value === "yes") {
       setWorkflowState("upload");
     } else {
-      setWorkflowState("user-input"); // NO flow
+      // NO flow: check if we have unanswered questions
+      setWorkflowState("user-input"); // Will be handled by useEffect
     }
   };
 
@@ -86,20 +91,60 @@ const Kmf: React.FC<KmfProps> = ({
         unansweredData.missing_questions &&
         unansweredData.missing_questions.length > 0
       ) {
+        // Has unanswered questions - show user input
         setQuestionsForInput(unansweredData.missing_questions);
       } else {
+        // No unanswered questions - go directly to final preview
         setWorkflowState("final-preview");
       }
     }
   }, [selection, unansweredData, workflowState]);
 
   // Handle upload completion (YES flow)
-  const handleUploadComplete = (questions: string[]) => {
-    if (questions.length > 0) {
+  const handleUploadComplete = (response: any) => {
+    if (
+      response.status === "questions_need_answers" &&
+      response.not_found_questions?.length > 0
+    ) {
+      // Explicit unanswered questions step
+      const questions = response.not_found_questions.map(
+        (q: any) => q.question
+      );
       setQuestionsForInput(questions);
       setWorkflowState("user-input");
-    } else {
-      setWorkflowState("final-preview");
+
+      //Show snackbar
+      setSnackbar({
+        open: true,
+        severity: "warning",
+        message: "Some questions need your input!",
+      });
+    } else if (response.status === "processing_complete") {
+      // Check if processing results still contain unanswered ("Not Found") answers
+      const unanswered = Object.entries(response.results || {})
+        .filter(([_, answer]) => answer === "Not Found")
+        .map(([question]) => question);
+
+      if (unanswered.length > 0) {
+        setQuestionsForInput(unanswered);
+        setWorkflowState("user-input");
+
+        //Show snackbar
+        setSnackbar({
+          open: true,
+          severity: "warning",
+          message: "Some answers are missing. Please fill them in.",
+        });
+      } else {
+        setWorkflowState("final-preview");
+
+        // Show snackbar
+        setSnackbar({
+          open: true,
+          severity: "success",
+          message: "All questions answered! Ready for preview.",
+        });
+      }
     }
   };
 
@@ -117,26 +162,32 @@ const Kmf: React.FC<KmfProps> = ({
     []
   );
 
+  // Handle edit index change
   const handleEditChange = (index: number | null) => {
     setEditIndex(index);
   };
 
+  // Handle save (after editing)
   const handleSave = (updatedQa: QAItem[]) => {
+    // Optionally refetch data to get the latest from backend
     refetchFullQuestions();
   };
 
+  // Render loading state
   const renderLoading = (message: string) => (
     <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
       <p>{message}</p>
     </Box>
   );
 
+  // Render error state
   const renderError = (message: string) => (
     <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
       <p style={{ color: "red" }}>{message}</p>
     </Box>
   );
 
+  // Render user input with questions panel
   const renderUserInputWithPanel = () => (
     <Box
       sx={{
@@ -200,10 +251,12 @@ const Kmf: React.FC<KmfProps> = ({
         content="A comprehensive framework capturing all key elements required to execute a successful go-to-market plan."
       />
 
+      {/* Step 1: Selection */}
       {workflowState === "selection" && (
         <DocumentSelector onSelect={handleSelection} />
       )}
 
+      {/* Step 2: Upload (YES flow only) */}
       {workflowState === "upload" && (
         <UploadDocument
           document_type={document_type}
@@ -212,6 +265,7 @@ const Kmf: React.FC<KmfProps> = ({
         />
       )}
 
+      {/* Step 3: User Input */}
       {workflowState === "user-input" && (
         <Box
           sx={{
@@ -224,6 +278,7 @@ const Kmf: React.FC<KmfProps> = ({
             width: "100%",
           }}
         >
+          {/* Handle NO flow loading/error states */}
           {selection === "no" &&
             unansweredLoading &&
             renderLoading("Loading unanswered questions...")}
@@ -231,10 +286,12 @@ const Kmf: React.FC<KmfProps> = ({
             unansweredError &&
             renderError("Failed to load questions.")}
 
+          {/* Show user input if we have questions */}
           {questionsForInput.length > 0 && renderUserInputWithPanel()}
         </Box>
       )}
 
+      {/* Step 4: Final Preview */}
       {workflowState === "final-preview" && (
         <Box
           sx={{
@@ -264,6 +321,13 @@ const Kmf: React.FC<KmfProps> = ({
           )}
         </Box>
       )}
+
+      <CustomSnackbar
+        open={snackbar.open}
+        severity={snackbar.severity}
+        message={snackbar.message}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      />
     </Box>
   );
 };
