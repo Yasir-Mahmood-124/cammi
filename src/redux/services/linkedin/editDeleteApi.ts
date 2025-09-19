@@ -1,5 +1,22 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
+interface EditDeleteRequest {
+  sub: string;
+  post_time: string;
+  action: "edit" | "delete";
+  new_values?: {
+    message?: string;
+    status?: string;
+    scheduled_time?: string;
+    // add other editable fields if API allows more
+  };
+}
+
+interface EditDeleteResponse {
+  success: boolean;
+  error?: string;
+}
+
 export const editDeleteApi = createApi({
   reducerPath: "editDeleteApi",
   baseQuery: fetchBaseQuery({
@@ -10,10 +27,7 @@ export const editDeleteApi = createApi({
     },
   }),
   endpoints: (builder) => ({
-    editDelete: builder.mutation<
-      { success: boolean; error?: string }, // Response shape
-      { sub: string; post_time: string; action: "edit" | "delete" } // Request body
-    >({
+    editDelete: builder.mutation<EditDeleteResponse, EditDeleteRequest>({
       query: (body) => ({
         url: "/edit-delete",
         method: "POST",

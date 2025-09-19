@@ -74,21 +74,54 @@ const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, data }) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleEditClick = () => {
-    const isoScheduledTime = scheduledTime
-      ? new Date(scheduledTime).toISOString()
-      : "";
+const handleEditClick = async () => {
+  if (!data?.scheduled_time) return;
 
-    const updatedData = {
-      message,
-      scheduled_time: isoScheduledTime,
-      image_keys: images,
-    };
+  // 👇 safely get sub from localStorage
+  const sub =
+    typeof window !== "undefined"
+      ? localStorage.getItem("linkedin_sub")
+      : null;
 
-    console.log("Edited data:", updatedData);
-    // TODO: Replace console.log with your API call or state update logic
-    onClose();
+  if (!sub) {
+    console.error("linkedin_sub not found in localStorage");
+    return;
+  }
+
+  // Convert back to ISO with timezone for API
+  const isoScheduledTime = scheduledTime
+    ? new Date(scheduledTime).toISOString()
+    : data.scheduled_time;
+
+  // Build new_values object (all optional, but include only what we have)
+  const newValues: Record<string, any> = {
+    status: "pending", // always hardcoded
   };
+
+  if (message) newValues.message = message;
+  if (isoScheduledTime) newValues.scheduled_time = isoScheduledTime;
+  if (images && images.length > 0) newValues.image_keys = images;
+
+  try {
+    const response = await editDelete({
+      sub,
+      post_time: isoScheduledTime, // same as scheduled_time
+      action: "edit",
+      new_values: newValues,
+    }).unwrap();
+
+    console.log("Edit response:", response);
+
+    if (response.success) {
+      onClose();
+    } else {
+      console.error("Edit failed:", response.error);
+    }
+  } catch (error) {
+    console.error("API Error editing post:", error);
+  }
+};
+
 
   const handleDeleteClick = async () => {
     if (!data?.scheduled_time || !data) return;
