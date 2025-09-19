@@ -88,29 +88,38 @@ const handleEditClick = async () => {
     return;
   }
 
-  // Convert back to ISO with timezone for API
+  // Original post time from backend (this identifies the post to edit)
+  const originalPostTime = data.scheduled_time;
+
+  // New scheduled time (if user changed it, otherwise keep same as original)
   const isoScheduledTime = scheduledTime
     ? new Date(scheduledTime).toISOString()
     : data.scheduled_time;
 
-  // Build new_values object (all optional, but include only what we have)
+  // Build new_values exactly as backend expects
   const newValues: Record<string, any> = {
-    status: "pending", // always hardcoded
+    status: "pending", // always required
+    scheduled_time: isoScheduledTime,
   };
 
   if (message) newValues.message = message;
-  if (isoScheduledTime) newValues.scheduled_time = isoScheduledTime;
   if (images && images.length > 0) newValues.image_keys = images;
 
   try {
     const response = await editDelete({
       sub,
-      post_time: isoScheduledTime, // same as scheduled_time
+      post_time: originalPostTime, // ✅ must be the original scheduled_time from backend
       action: "edit",
       new_values: newValues,
     }).unwrap();
-    console.log("New Values Sent:", newValues);
-    
+
+    console.log("Payload sent:", {
+      sub,
+      post_time: originalPostTime,
+      action: "edit",
+      new_values: newValues,
+    });
+
     console.log("Edit response:", response);
 
     if (response.success) {
@@ -122,6 +131,7 @@ const handleEditClick = async () => {
     console.error("API Error editing post:", error);
   }
 };
+
 
 
   const handleDeleteClick = async () => {
