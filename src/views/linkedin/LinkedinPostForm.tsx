@@ -216,7 +216,7 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
       if (!payload || !scheduledDateTime) return;
 
       // UTC date (no manual offset needed)
-      const utcDate = scheduledDateTime.toDate().toISOString().replace("Z", "+00:00");
+      const utcDate = scheduledDateTime.toDate().toISOString().replace(/\.\d{3}Z$/, "+00:00");
 
       await schedulePost({
         ...payload,
