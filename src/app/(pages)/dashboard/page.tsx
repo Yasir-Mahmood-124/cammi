@@ -111,24 +111,7 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // const handleLogout = async () => {
-  //   setShowLoader(true);
-  //   try {
-  //     const token = Cookies.get("token");
-  //     if (!token) throw new Error("No token found");
 
-  //     localStorage.removeItem("currentProject");
-  //     localStorage.removeItem("linkedin_sub");
-
-  //     await logoutApi({ token }).unwrap();
-  //     Cookies.remove("token");
-  //     router.push("/login");
-  //   } catch (error) {
-  //     console.error("Logout failed", error);
-  //   } finally {
-  //     setShowLoader(false);
-  //   }
-  // };
   const handleLogout = async () => {
     setShowLoader(true);
     try {
@@ -468,7 +451,7 @@ export default function DashboardPage() {
           flexGrow: 1,
           overflowY: "auto",
           minWidth: 0,
-          px: 3,
+          // px: 3,
         }}
       >
         {renderContent()}
@@ -477,42 +460,4 @@ export default function DashboardPage() {
   );
 }
 
-// "use client";
-// import React from 'react';
-// import Icp from '@/views/Icp';
-// import Gtm from '@/views/Gtm';
-// import Linkedin from '@/views/linkedin';
-// import Events from '@/views/events';
 
-// const DashboardPage = () => {
-//   return (
-//     <div>
-//         {/* <Gtm /> */}
-//         {/* <Icp /> */}
-//         {/* <Linkedin /> */}
-//         <Events />
-//     </div>
-//   )
-// }
-
-// export default DashboardPage;
-
-// "use client";
-// import React from 'react';
-// import Icp from '@/views/Icp';
-// import Gtm from '@/views/Gtm';
-// import Linkedin from '@/views/linkedin';
-// import Events from '@/views/events';
-
-// const DashboardPage = () => {
-//   return (
-//     <div>
-//         {/* <Gtm /> */}
-//         {/* <Icp /> */}
-//         {/* <Linkedin /> */}
-//         <Events />
-//     </div>
-//   )
-// }
-
-// export default DashboardPage;
