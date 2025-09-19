@@ -25,26 +25,27 @@ interface ImageDialogProps {
 }
 
 const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, data }) => {
-  if (!data) {
-    return null;
-  }
-
-  const [message, setMessage] = useState(data.message || "");
+  // ✅ Hooks always declared at top-level
+  const [message, setMessage] = useState(data?.message || "");
   const [scheduledTime, setScheduledTime] = useState("");
-  const [images, setImages] = useState<string[]>(data.image_keys || []);
+  const [images, setImages] = useState<string[]>(data?.image_keys || []);
 
+  // ✅ Update state when props change
   useEffect(() => {
-    setMessage(data.message || "");
-    setImages(data.image_keys || []);
-    if (data.scheduled_time) {
-      const dt = new Date(data.scheduled_time);
-      const tzOffset = dt.getTimezoneOffset() * 60000;
-      const localISOTime = new Date(dt.getTime() - tzOffset)
-        .toISOString()
-        .slice(0, 16);
-      setScheduledTime(localISOTime);
-    } else {
-      setScheduledTime("");
+    if (data) {
+      setMessage(data.message || "");
+      setImages(data.image_keys || []);
+
+      if (data.scheduled_time) {
+        const dt = new Date(data.scheduled_time);
+        const tzOffset = dt.getTimezoneOffset() * 60000;
+        const localISOTime = new Date(dt.getTime() - tzOffset)
+          .toISOString()
+          .slice(0, 16);
+        setScheduledTime(localISOTime);
+      } else {
+        setScheduledTime("");
+      }
     }
   }, [data, open]);
 
@@ -94,6 +95,11 @@ const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, data }) => {
     setImages([]);
     onClose();
   };
+
+  // ✅ Safe early return after hooks
+  if (!data) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
