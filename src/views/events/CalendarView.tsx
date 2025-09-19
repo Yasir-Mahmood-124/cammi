@@ -486,10 +486,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ posts }) => {
         </Box>
       </Box>
 
-      <Box sx={{ mt: 2 }}>
+      {/* <Box sx={{ mt: 2 }}>
         <Typography variant="subtitle2">Fetched Post Data:</Typography>
         <pre>{JSON.stringify(data, null, 2)}</pre>
-      </Box>
+      </Box> */}
 
       <ImageDialog
         open={dialogOpen}

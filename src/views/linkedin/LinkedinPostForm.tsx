@@ -45,7 +45,9 @@ interface ImageFile {
 
 const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
   const [message, setMessage] = useState("");
-  const [scheduledDateTime, setScheduledDateTime] = useState<Dayjs | null>(null);
+  const [scheduledDateTime, setScheduledDateTime] = useState<Dayjs | null>(
+    null
+  );
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedImages, setSelectedImages] = useState<ImageFile[]>([]);
 
@@ -59,8 +61,10 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
   // API hooks
   const [createPost, { isLoading, isError, error, isSuccess }] =
     useCreateLinkedInPostMutation();
-  const [schedulePost, { isLoading: isScheduling, isSuccess: scheduleSuccess }] =
-    useSchedulePostMutation();
+  const [
+    schedulePost,
+    { isLoading: isScheduling, isSuccess: scheduleSuccess },
+  ] = useSchedulePostMutation();
   const [generateIdea, { isLoading: isGenerating }] = useGenerateIdeaMutation();
 
   /** ---------------- Utilities ------------------ */
@@ -93,7 +97,13 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
     }
 
     const filesToProcess = Array.from(files).slice(0, availableSlots);
-    const validImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+    const validImageTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
 
     filesToProcess.forEach((file) => {
       if (!validImageTypes.includes(file.type)) {
@@ -147,7 +157,9 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
   /** ---------------- Build Payload ------------------ */
   const buildPayload = async () => {
     const storedSub =
-      typeof window !== "undefined" ? localStorage.getItem("linkedin_sub") : null;
+      typeof window !== "undefined"
+        ? localStorage.getItem("linkedin_sub")
+        : null;
 
     if (!storedSub || !message.trim()) return null;
 
@@ -161,10 +173,10 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
       );
     }
 
-    return { 
-      sub: storedSub, 
-      message, 
-      ...(imagesPayload && { images: imagesPayload }) 
+    return {
+      sub: storedSub,
+      message,
+      ...(imagesPayload && { images: imagesPayload }),
     };
   };
 
@@ -198,41 +210,40 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
     }
   };
 
- const handleSchedule = async () => {
-  try {
-    const payload = await buildPayload();
-    if (!payload || !scheduledDateTime) return;
+  const handleSchedule = async () => {
+    try {
+      const payload = await buildPayload();
+      if (!payload || !scheduledDateTime) return;
 
-    // add +5 hours (PKT offset)
-    const pktDate = new Date(scheduledDateTime.toDate().getTime() + 5 * 60 * 60 * 1000);
+      // UTC date (no manual offset needed)
+      const utcDate = scheduledDateTime.toDate();
 
-    await schedulePost({
-      ...payload,
-      scheduled_time: pktDate.toISOString(),
-    }).unwrap();
+      await schedulePost({
+        ...payload,
+        scheduled_time: utcDate.toISOString(), // always UTC
+      }).unwrap();
 
-    console.log("Scheduled Post Payload:", payload);
-    console.log("Scheduled Time (PKT):", pktDate.toISOString());
+      console.log("Scheduled Post Payload:", payload);
+      console.log("Scheduled Time (UTC):", utcDate.toISOString());
 
-    setSnackbar({
-      open: true,
-      severity: "success",
-      message: "Your post has been scheduled successfully!",
-      icon: <Schedule />,
-    });
-    setMessage("");
-    setScheduledDateTime(null);
-    handleScheduleClose();
-    clearAllImages();
-  } catch {
-    setSnackbar({
-      open: true,
-      severity: "error",
-      message: "An error occurred while scheduling your post",
-    });
-  }
-};
-
+      setSnackbar({
+        open: true,
+        severity: "success",
+        message: "Your post has been scheduled successfully!",
+        icon: <Schedule />,
+      });
+      setMessage("");
+      setScheduledDateTime(null);
+      handleScheduleClose();
+      clearAllImages();
+    } catch {
+      setSnackbar({
+        open: true,
+        severity: "error",
+        message: "An error occurred while scheduling your post",
+      });
+    }
+  };
 
   const handleAIGenerate = async () => {
     try {
@@ -301,22 +312,22 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
     <Box display="flex" gap={3} alignItems="flex-start">
       {/* Main Card - Always visible */}
       <Box flex={selectedImages.length > 0 ? 2 : 1}>
-        <Card 
-          elevation={0} 
-          sx={{ 
+        <Card
+          elevation={0}
+          sx={{
             background: "#ECECEC",
             borderRadius: 3,
-            border: "none"
+            border: "none",
           }}
         >
           <CardContent sx={{ p: 3 }}>
             {/* Create Tab Button */}
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                mb: 3, 
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 3,
                 fontWeight: 600,
-                color: "#333"
+                color: "#333",
               }}
             >
               Create
@@ -354,7 +365,11 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
             />
 
             {/* Action Buttons */}
-            <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+            >
               {/* Left side buttons */}
               <Box display="flex" gap={1.5}>
                 <Button
@@ -421,14 +436,16 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
                   }
                   size="small"
                   sx={{
-                    background: "linear-gradient(266deg, #EC5188 -0.23%, #6489C4 93.46%)",
+                    background:
+                      "linear-gradient(266deg, #EC5188 -0.23%, #6489C4 93.46%)",
                     color: "white",
                     borderRadius: 2,
                     fontSize: "0.75rem",
                     px: 2,
                     py: 1,
                     "&:hover": {
-                      background: "linear-gradient(266deg, #EC5188 -0.23%, #6489C4 93.46%)",
+                      background:
+                        "linear-gradient(266deg, #EC5188 -0.23%, #6489C4 93.46%)",
                       opacity: 0.9,
                     },
                     "&:disabled": {
@@ -445,11 +462,7 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
               <Button
                 variant="outlined"
                 startIcon={
-                  isGenerating ? (
-                    <CircularProgress size={14} />
-                  ) : (
-                    <Psychology />
-                  )
+                  isGenerating ? <CircularProgress size={14} /> : <Psychology />
                 }
                 onClick={handleAIGenerate}
                 disabled={isGenerating}
@@ -478,12 +491,12 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
       {/* Image Preview Card - Only visible when images are selected */}
       {selectedImages.length > 0 && (
         <Box flex={1} sx={{ minWidth: 300 }}>
-          <Card 
-            elevation={0} 
-            sx={{ 
+          <Card
+            elevation={0}
+            sx={{
               background: "#E2EDF8",
               borderRadius: 3,
-              border: "none"
+              border: "none",
             }}
           >
             <CardContent sx={{ p: 3 }}>
@@ -577,7 +590,11 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
             disabled={!scheduledDateTime || isScheduling}
             onClick={handleSchedule}
             startIcon={
-              isScheduling ? <CircularProgress size={16} color="inherit" /> : <AccessTime />
+              isScheduling ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <AccessTime />
+              )
             }
           >
             {isScheduling ? "Scheduling..." : "Schedule"}
