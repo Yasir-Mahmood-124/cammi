@@ -13,6 +13,7 @@ import {
   IconButton,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useEditDeleteMutation } from "@/redux/services/linkedin/editDeleteApi";
 
 interface ImageDialogProps {
   open: boolean;
@@ -29,6 +30,8 @@ const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, data }) => {
   const [message, setMessage] = useState(data?.message || "");
   const [scheduledTime, setScheduledTime] = useState("");
   const [images, setImages] = useState<string[]>(data?.image_keys || []);
+
+  const [editDelete, { isLoading: isDeleting }] = useEditDeleteMutation();
 
   // ✅ Update state when props change
   useEffect(() => {
@@ -87,19 +90,41 @@ const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, data }) => {
     onClose();
   };
 
-  const handleDeleteClick = () => {
-    console.log("Post deleted");
-    // TODO: Replace console.log with your delete API call or state update logic
-    setMessage("");
-    setScheduledTime("");
-    setImages([]);
-    onClose();
-  };
+  const handleDeleteClick = async () => {
+    if (!data?.scheduled_time || !data) return;
 
-  // ✅ Safe early return after hooks
-  if (!data) {
-    return null;
-  }
+    // 👇 safely get sub from localStorage
+    const sub =
+      typeof window !== "undefined"
+        ? localStorage.getItem("linkedin_sub")
+        : null;
+
+    if (!sub) {
+      console.error("linkedin_sub not found in localStorage");
+      return;
+    }
+
+    try {
+      const response = await editDelete({
+        sub, // ✅ taken from localStorage
+        post_time: data.scheduled_time,
+        action: "delete",
+      }).unwrap();
+
+      console.log("Delete response:", response);
+
+      if (response.success) {
+        setMessage("");
+        setScheduledTime("");
+        setImages([]);
+        onClose();
+      } else {
+        console.error("Delete failed:", response.error);
+      }
+    } catch (error) {
+      console.error("API Error deleting post:", error);
+    }
+  };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
