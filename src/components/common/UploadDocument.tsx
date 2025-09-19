@@ -175,7 +175,7 @@ const UploadDocument: React.FC<UploadDocumentProps> = ({
               gutterBottom
               sx={{ fontSize: "1.25rem", fontWeight: 700, color: "#000" }}
             >
-              Please upload the {document_type.toUpperCase()} Document.
+              Please upload the GTM Document.
             </Typography>
 
             <Typography
