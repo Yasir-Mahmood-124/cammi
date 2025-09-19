@@ -215,8 +215,21 @@ const LinkedInPostForm: React.FC<LinkedInPostProps> = ({ sub }) => {
       const payload = await buildPayload();
       if (!payload || !scheduledDateTime) return;
 
+      // ✅ Prevent past date/time
+      if (dayjs(scheduledDateTime).isBefore(dayjs())) {
+        setSnackbar({
+          open: true,
+          severity: "error",
+          message: "You cannot select a past time!",
+        });
+        return;
+      }
+
       // UTC date (no manual offset needed)
-      const utcDate = scheduledDateTime.toDate().toISOString().replace(/\.\d{3}Z$/, "+00:00");
+      const utcDate = scheduledDateTime
+        .toDate()
+        .toISOString()
+        .replace(/\.\d{3}Z$/, "+00:00");
 
       await schedulePost({
         ...payload,
