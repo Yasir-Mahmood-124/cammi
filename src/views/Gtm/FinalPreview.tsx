@@ -120,6 +120,7 @@ const FinalPreview: React.FC<FinalPreviewProps> = ({ data, onEdit }) => {
 
             await uploadTextFile(payload).unwrap();
             console.log("✅ File uploaded successfully");
+            console.log("file content: ", base64Content);
 
             setWsActive(true);
             setDisplayedContent("Waiting for WebSocket messages...");

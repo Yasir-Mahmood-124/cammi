@@ -27,11 +27,13 @@ const DocumentActions: React.FC = () => {
     try {
       const response = await getDocxFile().unwrap();
 
+      console.log("📥 Full API Response:", response);
       const byteCharacters = atob(response.docxBase64);
       const byteArrays = [];
 
       for (let i = 0; i < byteCharacters.length; i++) {
         byteArrays.push(byteCharacters.charCodeAt(i));
+        
       }
 
       const blob = new Blob([new Uint8Array(byteArrays)], {
