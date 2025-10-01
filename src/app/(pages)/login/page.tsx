@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Box, Typography, TextField, Stack, Paper, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  Stack,
+  Paper,
+  CircularProgress,
+} from "@mui/material";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,9 +31,14 @@ const Login = () => {
   // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error" | "info" | "warning">("info");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<
+    "success" | "error" | "info" | "warning"
+  >("info");
 
-  const handleSnackbar = (message: string, severity: "success" | "error" | "info" | "warning") => {
+  const handleSnackbar = (
+    message: string,
+    severity: "success" | "error" | "info" | "warning"
+  ) => {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
     setSnackbarOpen(true);
@@ -43,9 +55,23 @@ const Login = () => {
 
     try {
       const response = await login({ email, password }).unwrap();
+
+      // ✅ Save token
       Cookies.set("token", response.token, { expires: 7 });
+
+      // ✅ Clear old project/menu state
+      localStorage.removeItem("currentProject");
+      localStorage.removeItem("subMenuclicked");
+      localStorage.removeItem("linkedin_sub");
+
+      // ✅ Optionally reset Redux state too if you store them there
+      // dispatch(clearSubmenu());
+      // dispatch(clearProject()); // if you have this
+
       handleSnackbar("Login successful!", "success");
-      setTimeout(() => router.push("/dashboard"), 500); // slight delay for snackbar
+
+      // ✅ Redirect to dashboard
+      setTimeout(() => router.push("/dashboard"), 500);
     } catch (err: any) {
       handleSnackbar(err?.data?.message || "Login failed", "error");
     }
@@ -172,15 +198,25 @@ const Login = () => {
           />
         </Box>
 
-
         {/* Not registered yet? */}
-        <Typography variant="body1" color="text.primary" sx={{ mt: 2, textAlign: "center" }}>
+        <Typography
+          variant="body1"
+          color="text.primary"
+          sx={{ mt: 2, textAlign: "center" }}
+        >
           Don’t have an account?{" "}
-          <Link href="/register" style={{ color: "black", textDecoration: "none" }}>
+          <Link
+            href="/register"
+            style={{ color: "black", textDecoration: "none" }}
+          >
             <strong
               style={{ color: "black", cursor: "pointer" }}
-              onMouseOver={(e) => ((e.target as HTMLElement).style.textDecoration = "underline")}
-              onMouseOut={(e) => ((e.target as HTMLElement).style.textDecoration = "none")}
+              onMouseOver={(e) =>
+                ((e.target as HTMLElement).style.textDecoration = "underline")
+              }
+              onMouseOut={(e) =>
+                ((e.target as HTMLElement).style.textDecoration = "none")
+              }
             >
               Sign Up
             </strong>

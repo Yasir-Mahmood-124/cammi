@@ -169,27 +169,26 @@ export default function DashboardPage() {
           flexDirection="column"
         >
           <Box
-  component="img"
-  src={Logo.src}
-  alt="Example"
-  sx={{ width: 100, height: "auto", ml: "30px", cursor: "pointer" }}
-  onClick={() => {
-    // 1️⃣ Remove from localStorage
-    localStorage.removeItem("currentProject");
-    localStorage.removeItem("subMenuclicked");
+            component="img"
+            src={Logo.src}
+            alt="Example"
+            sx={{ width: 100, height: "auto", ml: "30px", cursor: "pointer" }}
+            onClick={() => {
+              // 1️⃣ Remove from localStorage
+              localStorage.removeItem("currentProject");
+              localStorage.removeItem("subMenuclicked");
 
-    // 2️⃣ Clear Redux state
-    dispatch(clearSubmenu());
+              // 2️⃣ Clear Redux state
+              dispatch(clearSubmenu());
 
-    // 3️⃣ Reset active tab so DashboardWelcome shows
-    setActiveTab(null);
-    setOpenMainTab(null);
+              // 3️⃣ Reset active tab so DashboardWelcome shows
+              setActiveTab(null);
+              setOpenMainTab(null);
 
-    // If you want to route to a landing page explicitly
-    // router.push("/dashboard"); // or your home route
-  }}
-/>
-
+              // If you want to route to a landing page explicitly
+              // router.push("/dashboard"); // or your home route
+            }}
+          />
 
           <Divider
             sx={{ width: "260px", mt: 2, borderBottomWidth: 2, mb: "20px" }}
@@ -241,11 +240,20 @@ export default function DashboardPage() {
             .map((category) => (
               <Box key={category.key}>
                 <ListItemButton
-                  onClick={() =>
+                  onClick={() => {
+                    if (category.key === "smart-scheduler") {
+                      const currentProject =
+                        localStorage.getItem("currentProject");
+                      if (!currentProject) {
+                        alert("⚠️ Please select or create a project first!");
+                        return;
+                      }
+                    }
+
                     setOpenMainTab((prev) =>
                       prev === category.key ? null : category.key
-                    )
-                  }
+                    );
+                  }}
                   sx={{ fontWeight: "bold" }}
                 >
                   <ListItemText primary={category.label} />

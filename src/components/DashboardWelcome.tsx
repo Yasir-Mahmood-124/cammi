@@ -260,6 +260,7 @@ const DashboardWelcome: React.FC = () => {
             <Button
               variant="outlined"
               size="large"
+              onClick={() => setOpenCreateProject(true)}
               sx={{
                 color: "black",
                 border: "2px solid black",
@@ -268,7 +269,7 @@ const DashboardWelcome: React.FC = () => {
                 py: 0.2,
               }}
             >
-              Learn More
+              Select 
             </Button>
           </Box>
         </Paper>

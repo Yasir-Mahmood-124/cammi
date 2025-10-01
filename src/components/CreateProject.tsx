@@ -185,34 +185,35 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
           </Typography>
 
           {/* Mode selector */}
-          <RadioGroup
-            row
-            value={mode}
-            onChange={(e) => {
-              setMode(e.target.value as any);
-              setOrganization("");
-              setProject("");
-              setSelectedOrgId("");
-              setSelectedProjectId("");
-            }}
-            sx={{ mb: 2 }}
-          >
-            <FormControlLabel
-              value="createNew"
-              control={<Radio />}
-              label="Create New"
-            />
-            <FormControlLabel
-              value="createExisting"
-              control={<Radio />}
-              label="Create in Existing"
-            />
-            <FormControlLabel
-              value="selectExisting"
-              control={<Radio />}
-              label="Select Existing"
-            />
-          </RadioGroup>
+          <FormControl component="fieldset" sx={{ mb: 2 }}>
+            <RadioGroup
+              row
+              value={mode}
+              onChange={(e) => {
+                setMode(e.target.value as any);
+                setOrganization("");
+                setProject("");
+                setSelectedOrgId("");
+                setSelectedProjectId("");
+              }}
+            >
+              <FormControlLabel
+                value="createNew"
+                control={<Radio color="primary" />}
+                label="Create New"
+              />
+              <FormControlLabel
+                value="createExisting"
+                control={<Radio color="primary" />}
+                label="Create in Existing"
+              />
+              <FormControlLabel
+                value="selectExisting"
+                control={<Radio color="primary" />}
+                label="Select Existing"
+              />
+            </RadioGroup>
+          </FormControl>
 
           {/* Create New */}
           {mode === "createNew" && (
@@ -240,8 +241,10 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
           {mode === "createExisting" && (
             <>
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Select Organization</InputLabel>
+                <InputLabel id="org-label">Organization</InputLabel>
                 <Select
+                  labelId="org-label"
+                  label="Organization"
                   value={selectedOrgId}
                   onChange={(e) => setSelectedOrgId(e.target.value)}
                 >
@@ -254,8 +257,10 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
                   ))}
                 </Select>
               </FormControl>
+
               <TextField
-                placeholder="Project Name"
+                label="Project Name"
+                placeholder="Enter Project Name"
                 fullWidth
                 size="small"
                 value={project}
@@ -270,8 +275,10 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
             <>
               {/* Org dropdown */}
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Select Organization</InputLabel>
+                <InputLabel id="select-org-label">Organization</InputLabel>
                 <Select
+                  labelId="select-org-label"
+                  label="Organization"
                   value={selectedOrgId}
                   onChange={(e) => setSelectedOrgId(e.target.value)}
                 >
@@ -285,17 +292,17 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
                 </Select>
               </FormControl>
 
-              {/* Project dropdown (auto loads when org selected) */}
+              {/* Project dropdown */}
               {selectedOrgId && (
                 <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel>Select Project</InputLabel>
+                  <InputLabel id="select-project-label">Project</InputLabel>
                   <Select
+                    labelId="select-project-label"
+                    label="Project"
                     value={selectedProjectId}
                     onChange={(e) => setSelectedProjectId(e.target.value)}
                   >
-                    {projectLoading && (
-                      <MenuItem disabled>Loading...</MenuItem>
-                    )}
+                    {projectLoading && <MenuItem disabled>Loading...</MenuItem>}
                     {projectData?.projects?.map((p: any) => (
                       <MenuItem key={p.id} value={p.id}>
                         {p.project_name}
