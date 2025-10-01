@@ -17,7 +17,6 @@ import { useLogoutMutation } from "@/redux/services/auth/authApi";
 import Cookies from "js-cookie";
 import Logo from "../../../assests/images/Logo.png";
 
-import { useGetUserProjectsQuery } from "@/redux/services/projects/projectApi";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import {
@@ -83,13 +82,9 @@ export default function DashboardPage() {
   const [openMainTab, setOpenMainTab] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey | null>(null);
   const [showLoader, setShowLoader] = useState(false);
-  const [projectName, setProjectName] = useState<string | null>(null);
   const dispatch = useDispatch();
   const router = useRouter();
   const [logoutApi] = useLogoutMutation();
-
-  const { data: projectsData, isLoading: projectsLoading } =
-    useGetUserProjectsQuery();
 
   const submenuClicked = useSelector(
     (state: RootState) => state.submenu.clicked
@@ -98,19 +93,6 @@ export default function DashboardPage() {
   useEffect(() => {
     dispatch(loadSubmenuFromStorage());
   }, [dispatch]);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("currentProject");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setProjectName(parsed.project_name);
-      } catch {
-        setProjectName(null);
-      }
-    }
-  }, []);
-
 
   const handleLogout = async () => {
     setShowLoader(true);
@@ -122,7 +104,6 @@ export default function DashboardPage() {
 
       await logoutApi({ token }).unwrap();
       Cookies.remove("token");
-      localStorage.removeItem("currentProject");
       localStorage.removeItem("linkedin_sub");
       localStorage.removeItem("subMenuclicked");
       router.push("/login");
@@ -148,7 +129,6 @@ export default function DashboardPage() {
         },
       ],
     },
-    { label: "Projects", key: "projects" },
     {
       label: "Templates",
       key: "templates",
@@ -189,11 +169,28 @@ export default function DashboardPage() {
           flexDirection="column"
         >
           <Box
-            component="img"
-            src={Logo.src}
-            alt="Example"
-            sx={{ width: 100, height: "auto", ml: "30px" }}
-          />
+  component="img"
+  src={Logo.src}
+  alt="Example"
+  sx={{ width: 100, height: "auto", ml: "30px", cursor: "pointer" }}
+  onClick={() => {
+    // 1️⃣ Remove from localStorage
+    localStorage.removeItem("currentProject");
+    localStorage.removeItem("subMenuclicked");
+
+    // 2️⃣ Clear Redux state
+    dispatch(clearSubmenu());
+
+    // 3️⃣ Reset active tab so DashboardWelcome shows
+    setActiveTab(null);
+    setOpenMainTab(null);
+
+    // If you want to route to a landing page explicitly
+    // router.push("/dashboard"); // or your home route
+  }}
+/>
+
+
           <Divider
             sx={{ width: "260px", mt: 2, borderBottomWidth: 2, mb: "20px" }}
           />
@@ -265,8 +262,8 @@ export default function DashboardPage() {
                   unmountOnExit
                 >
                   <List component="div" disablePadding>
-                    {category.key === "projects" ? null : category.children &&
-                      category.children.length > 0 ? (
+                    {category.children &&
+                      category.children.length > 0 &&
                       category.children.map((child) => (
                         <ListItemButton
                           key={child.key}
@@ -282,8 +279,9 @@ export default function DashboardPage() {
                           <ListItemIcon>{child.icon}</ListItemIcon>
                           <ListItemText primary={child.label} />
                         </ListItemButton>
-                      ))
-                    ) : (
+                      ))}
+
+                    {!category.children && (
                       <ListItemButton
                         disabled
                         sx={{
@@ -303,84 +301,6 @@ export default function DashboardPage() {
                           }}
                         />
                       </ListItemButton>
-                    )}
-
-                    {category.key === "projects" && (
-                      <>
-                        {projectsLoading && (
-                          <Typography
-                            sx={{
-                              pl: 4,
-                              py: 1,
-                              fontStyle: "italic",
-                              color: "text.secondary",
-                            }}
-                          >
-                            Loading projects...
-                          </Typography>
-                        )}
-
-                        {!projectsLoading &&
-                          projectsData?.projects?.length === 0 && (
-                            <Typography
-                              sx={{
-                                pl: 4,
-                                py: 1,
-                                fontStyle: "italic",
-                                color: "text.secondary",
-                              }}
-                            >
-                              No projects found.
-                            </Typography>
-                          )}
-
-                        {projectsData?.projects?.map((project: any) => (
-                          <ListItemButton
-                            key={project.project_id}
-                            onClick={() => {
-                              localStorage.setItem(
-                                "currentProject",
-                                JSON.stringify(project)
-                              );
-                              setProjectName(project.project_name);
-                              setOpenMainTab(null);
-                            }}
-                            sx={{
-                              mb: 1,
-                              borderRadius: "9999px",
-                              px: "2px",
-                              py: "5px",
-                              textAlign: "center",
-                              background:
-                                projectName === project.project_name
-                                  ? "linear-gradient(90deg, #EF4681 0%, #4F8CCA 100%)"
-                                  : "transparent",
-                              color:
-                                projectName === project.project_name
-                                  ? "primary.contrastText"
-                                  : "text.primary",
-                              "&:hover": {
-                                background:
-                                  projectName === project.project_name
-                                    ? "linear-gradient(90deg, #D63A73 0%, #3F7BB5 100%)"
-                                    : "action.hover",
-                              },
-                              transition: "all 0.2s ease-in-out",
-                            }}
-                          >
-                            <ListItemText
-                              primary={project.project_name}
-                              primaryTypographyProps={{
-                                fontWeight:
-                                  projectName === project.project_name
-                                    ? "bold"
-                                    : "medium",
-                                fontSize: "0.9rem",
-                              }}
-                            />
-                          </ListItemButton>
-                        ))}
-                      </>
                     )}
                   </List>
                 </Collapse>
@@ -451,7 +371,6 @@ export default function DashboardPage() {
           flexGrow: 1,
           overflowY: "auto",
           minWidth: 0,
-          // px: 3,
         }}
       >
         {renderContent()}
@@ -459,5 +378,3 @@ export default function DashboardPage() {
     </Box>
   );
 }
-
-

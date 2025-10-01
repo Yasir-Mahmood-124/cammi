@@ -10,17 +10,19 @@ import PanelImg from "@/assests/images/Panel.png";
 import GradientButton from "@/components/common/GradientButton";
 import CustomSnackbar from "@/components/common/CustomSnackbar";
 
-import { useForgotPasswordMutation, useResetPasswordMutation } from "@/redux/services/auth/authApi";
+import { useForgotPasswordMutation, useVerifyCodeMutation, useResetPasswordMutation } from "@/redux/services/auth/authApi";
 
 const ResetPassword = () => {
   const router = useRouter();
 
-  const [isCodeSent, setIsCodeSent] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [forgotPassword, { isLoading: isSendingCode }] = useForgotPasswordMutation();
+  const [verifyCode, { isLoading: isVerifying }] = useVerifyCodeMutation();
   const [resetPassword, { isLoading: isResetting }] = useResetPasswordMutation();
 
   // Snackbar state
@@ -35,38 +37,51 @@ const ResetPassword = () => {
   };
 
   const handleSendResetCode = async () => {
-    if (!email) {
+    if (!email.trim()) {
       handleSnackbar("Please enter your email", "warning");
       return;
     }
     try {
       const response = await forgotPassword({ email }).unwrap();
       handleSnackbar(response.message, "success");
-      setIsCodeSent(true); // move to reset password step
-      // keep the email for the reset API
+      setStep(2); // move to verify code step
     } catch (err: any) {
       handleSnackbar(err?.data?.message || "Failed to send reset code", "error");
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!verificationCode || !newPassword) {
-      handleSnackbar("Please enter code and new password", "warning");
+  const handleVerifyCode = async () => {
+    if (!email.trim() || !verificationCode.trim()) {
+      handleSnackbar("Please enter email and code", "warning");
       return;
     }
     try {
-      await resetPassword({
-        email,
-        code: verificationCode,
-        newPassword,
-      }).unwrap(); // if successful, proceeds
-      handleSnackbar("Password reset successful. Redirecting to login...", "success");
+      const response = await verifyCode({ email, code: verificationCode }).unwrap();
+      handleSnackbar(response.message, "success");
+      setStep(3); // move to reset password step
+    } catch (err: any) {
+      handleSnackbar(err?.data?.message || "Verification failed", "error");
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!email.trim() || !newPassword.trim() || !confirmPassword.trim()) {
+      handleSnackbar("Please fill all fields", "warning");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      handleSnackbar("Passwords do not match", "warning");
+      return;
+    }
+    try {
+      const response = await resetPassword({ email, newPassword, confirmPassword }).unwrap();
+      handleSnackbar(response.message, "success");
 
       // Clear fields
       setVerificationCode("");
       setNewPassword("");
+      setConfirmPassword("");
 
-      // Redirect to login after a short delay
       setTimeout(() => {
         router.push("/login");
       }, 1500);
@@ -104,29 +119,22 @@ const ResetPassword = () => {
           backgroundRepeat: "no-repeat",
         }}
       >
-        {/* Heading */}
         <Typography variant="h1" color="text.primary" gutterBottom>
-          {isCodeSent ? "Reset Password" : "Forgot Password"}
+          {step === 1 ? "Forgot Password" : step === 2 ? "Verify Code" : "Reset Password"}
         </Typography>
 
         <Stack spacing={2} sx={{ mt: 3, alignItems: "center" }}>
-          {!isCodeSent ? (
-            // Step 1: Forgot Password - Enter Email
+          {step === 1 && (
             <Box sx={{ width: "80%" }}>
               <TextField
                 fullWidth
-                placeholder="Enter verification email"
+                placeholder="Enter your email"
                 variant="outlined"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                InputProps={{
-                  sx: {
-                    borderRadius: 2,
-                    "& .MuiInputBase-input": { padding: "10px" },
-                  },
-                }}
+                InputProps={{ sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } } }}
               />
-              <Box sx={{ marginTop: 3 }}>
+              <Box sx={{ mt: 3 }}>
                 <GradientButton
                   text={isSendingCode ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Send Reset Code"}
                   onClick={handleSendResetCode}
@@ -135,32 +143,33 @@ const ResetPassword = () => {
                   disabled={isSendingCode}
                 />
               </Box>
-
             </Box>
-          ) : (
-            // Step 2: Reset Password Form
-            <>
-              {/* Verification Code Field */}
-              <Box sx={{ textAlign: "left", width: "80%" }}>
-                <Typography variant="body2" color="text.primary" gutterBottom>
-                  Verification Code
-                </Typography>
-                <TextField
-                  fullWidth
-                  placeholder="Enter your verification code"
-                  variant="outlined"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  InputProps={{
-                    sx: {
-                      borderRadius: 2,
-                      "& .MuiInputBase-input": { padding: "10px" },
-                    },
-                  }}
+          )}
+
+          {step === 2 && (
+            <Box sx={{ width: "80%" }}>
+              <TextField
+                fullWidth
+                placeholder="Enter verification code"
+                variant="outlined"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                InputProps={{ sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } } }}
+              />
+              <Box sx={{ mt: 3 }}>
+                <GradientButton
+                  text={isVerifying ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Verify Code"}
+                  onClick={handleVerifyCode}
+                  width="100%"
+                  fontSize="1rem"
+                  disabled={isVerifying}
                 />
               </Box>
+            </Box>
+          )}
 
-              {/* New Password Field */}
+          {step === 3 && (
+            <>
               <Box sx={{ textAlign: "left", width: "80%" }}>
                 <Typography variant="body2" color="text.primary" gutterBottom>
                   New Password
@@ -172,28 +181,38 @@ const ResetPassword = () => {
                   variant="outlined"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  InputProps={{
-                    sx: {
-                      borderRadius: 2,
-                      "& .MuiInputBase-input": { padding: "10px" },
-                    },
-                  }}
+                  InputProps={{ sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } } }}
                 />
               </Box>
 
-              {/* Reset Password Button */}
-              <GradientButton
-                text={isResetting ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Reset Password"}
-                onClick={handleResetPassword}
-                width="80%"
-                fontSize="1rem"
-                disabled={isResetting}
-              />
+              <Box sx={{ textAlign: "left", width: "80%" }}>
+                <Typography variant="body2" color="text.primary" gutterBottom>
+                  Confirm Password
+                </Typography>
+                <TextField
+                  fullWidth
+                  type="password"
+                  placeholder="Confirm new password"
+                  variant="outlined"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  InputProps={{ sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } } }}
+                />
+              </Box>
+
+              <Box sx={{ mt: 3 }}>
+                <GradientButton
+                  text={isResetting ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Reset Password"}
+                  onClick={handleResetPassword}
+                  width="100%"
+                  fontSize="1rem"
+                  disabled={isResetting}
+                />
+              </Box>
             </>
           )}
         </Stack>
 
-        {/* Back to login */}
         <Typography variant="body1" color="text.primary" sx={{ mt: 2, textAlign: "center" }}>
           Remembered your password?{" "}
           <Link href="/login" style={{ color: "black", textDecoration: "none" }}>
@@ -208,7 +227,6 @@ const ResetPassword = () => {
         </Typography>
       </Paper>
 
-      {/* Snackbar */}
       <CustomSnackbar
         open={snackbarOpen}
         message={snackbarMessage}

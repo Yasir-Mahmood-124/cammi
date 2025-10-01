@@ -19,6 +19,8 @@ import CustomSnackbar from "@/components/common/CustomSnackbar";
 const Register = () => {
   const router = useRouter();
 
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showVerify, setShowVerify] = useState(false);
@@ -36,13 +38,13 @@ const Register = () => {
   const [register, { isLoading }] = useRegisterMutation();
 
   const handleSignUp = async () => {
-    if (!email.trim() || !password.trim()) {
-      handleSnackbar("Please enter email and password", "warning");
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password.trim()) {
+      handleSnackbar("Please fill all the fields", "warning");
       return;
     }
 
     try {
-      await register({ email, password }).unwrap();
+      await register({ firstName, lastName, email, password }).unwrap();
       handleSnackbar("Registration successful! Please verify your email.", "success");
       setShowVerify(true); // show verification screen
     } catch (err: any) {
@@ -96,6 +98,41 @@ const Register = () => {
         </Typography>
 
         <Stack spacing={2} sx={{ mt: 3, alignItems: "center" }}>
+          {/* First Name */}
+          <Box sx={{ textAlign: "left", width: "80%" }}>
+            <Typography variant="body2" color="text.primary" gutterBottom>
+              First Name
+            </Typography>
+            <TextField
+              fullWidth
+              placeholder="Enter your first name"
+              variant="outlined"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              InputProps={{
+                sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } },
+              }}
+            />
+          </Box>
+
+          {/* Last Name */}
+          <Box sx={{ textAlign: "left", width: "80%" }}>
+            <Typography variant="body2" color="text.primary" gutterBottom>
+              Last Name
+            </Typography>
+            <TextField
+              fullWidth
+              placeholder="Enter your last name"
+              variant="outlined"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              InputProps={{
+                sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } },
+              }}
+            />
+          </Box>
+
+          {/* Email */}
           <Box sx={{ textAlign: "left", width: "80%" }}>
             <Typography variant="body2" color="text.primary" gutterBottom>
               Email
@@ -112,6 +149,7 @@ const Register = () => {
             />
           </Box>
 
+          {/* Password */}
           <Box sx={{ textAlign: "left", width: "80%" }}>
             <Typography variant="body2" color="text.primary" gutterBottom>
               Password
@@ -139,8 +177,6 @@ const Register = () => {
             disabled={isLoading}
           />
         </Box>
-
-
 
         <Typography variant="body1" color="text.primary" sx={{ mt: 2, textAlign: "center" }}>
           Already registered?{" "}

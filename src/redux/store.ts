@@ -1,6 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { authApi } from "./services/auth/authApi";
-import { projectsApi } from "./services/projects/projectApi";
 import { refineApi } from "./services/common/refineApi";
 import { uploadApiSlice } from "./services/common/uploadApiSlice";
 import submenuReducer from "./services/features/submenuSlice";
@@ -17,13 +16,14 @@ import { getQuestionsApi } from "./services/common/getQuestionsApi";
 import { editQuestionApi } from "./services/common/editQuestion";
 import authReducer from "./services/auth/authSlice";
 import { fetchSchedulePostApi } from "./services/linkedin/fetchSchedulePostApi";
+import { projectsApi } from "./services/projects/projectsApi";
+
 
 export const store = configureStore({
   reducer: {
     submenu: submenuReducer,
     auth: authReducer,
     [authApi.reducerPath]: authApi.reducer,
-    [projectsApi.reducerPath]: projectsApi.reducer,
     [refineApi.reducerPath]: refineApi.reducer,
     [uploadApiSlice.reducerPath]: uploadApiSlice.reducer,
     [realTimeDataApi.reducerPath]: realTimeDataApi.reducer,
@@ -38,13 +38,13 @@ export const store = configureStore({
     [getQuestionsApi.reducerPath]: getQuestionsApi.reducer,
     [editQuestionApi.reducerPath]: editQuestionApi.reducer,
     [fetchSchedulePostApi.reducerPath]: fetchSchedulePostApi.reducer,
+    [projectsApi.reducerPath]: projectsApi.reducer,
   },
 
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(
         authApi.middleware,
-        projectsApi.middleware,
         refineApi.middleware,
         uploadApiSlice.middleware,
         realTimeDataApi.middleware,
@@ -58,7 +58,8 @@ export const store = configureStore({
         addQuestionApi.middleware,
         getQuestionsApi.middleware,
         editQuestionApi.middleware,
-        fetchSchedulePostApi.middleware
+        fetchSchedulePostApi.middleware,
+        projectsApi.middleware,
       ),
 });
 

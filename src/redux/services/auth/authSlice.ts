@@ -1,23 +1,25 @@
 // redux/features/auth/authSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
- 
+
 interface User {
   id: string;
   email: string;
+  firstName?: string; // new
+  lastName?: string;  // new
 }
- 
+
 interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
 }
- 
+
 const initialState: AuthState = {
   user: null,
   token: null,
   isAuthenticated: false,
 };
- 
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -37,6 +39,6 @@ const authSlice = createSlice({
     },
   },
 });
- 
+
 export const { setCredentials, clearCredentials } = authSlice.actions;
 export default authSlice.reducer;

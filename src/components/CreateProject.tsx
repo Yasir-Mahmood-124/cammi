@@ -6,130 +6,320 @@ import {
   CardContent,
   Typography,
   TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  CircularProgress,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
 } from "@mui/material";
+import Cookies from "js-cookie";
 import GradientButton from "./common/GradientButton";
-import { useCreateProjectMutation } from "@/redux/services/projects/projectApi";
 import CustomSnackbar from "./common/CustomSnackbar";
+import {
+  useCreateProjectMutation,
+  useGetSpecificOrganizationsQuery,
+  useGetSpecificProjectsQuery,
+} from "@/redux/services/projects/projectsApi";
 
-export default function CreateProject({
-  onCreate,
-}: {
+interface CreateProjectProps {
   onCreate: (data: { project: string; organization: string }) => void;
-}) {
-  const [project, setProject] = useState("");
-  const [organization, setOrganization] = useState("");
+}
 
-  // Snackbar state
+export default function CreateProject({ onCreate }: CreateProjectProps) {
+  const session_id = Cookies.get("token") || "";
+
+  const [mode, setMode] = useState<
+    "createNew" | "createExisting" | "selectExisting"
+  >("createNew");
+  const [organization, setOrganization] = useState("");
+  const [project, setProject] = useState("");
+  const [selectedOrgId, setSelectedOrgId] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] =
-    useState<"success" | "error" | "info" | "warning">("info");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<
+    "success" | "error" | "info" | "warning"
+  >("info");
 
-  // RTK Query mutation
-  const [createProject, { isLoading }] = useCreateProjectMutation();
+  // Fetch organizations with session_id in headers
+  const { data: orgData, isLoading: orgLoading } =
+    useGetSpecificOrganizationsQuery(
+      { session_id },
+      { skip: mode === "createNew" }
+    );
+
+  // Fetch projects with organization_id in headers (auto runs when selectedOrgId changes)
+  const { data: projectData, isLoading: projectLoading } =
+    useGetSpecificProjectsQuery(
+      { organization_id: selectedOrgId },
+      { skip: !selectedOrgId || mode !== "selectExisting" }
+    );
+
+  const [createProjectApi, { isLoading: creating }] =
+    useCreateProjectMutation();
 
   const handleSubmit = async () => {
-    if (!project || !organization) {
-      setSnackbarMessage("Both fields are required");
-      setSnackbarSeverity("warning");
-      setSnackbarOpen(true);
-      return;
-    }
-
     try {
-      const payload = {
-        project_name: project,
-        organization_name: organization,
-      };
+      if (mode === "createNew") {
+        if (!organization || !project) {
+          return showSnackbar(
+            "Please enter organization and project name",
+            "warning"
+          );
+        }
 
-      const response = await createProject(payload).unwrap();
+        const response: any = await createProjectApi({
+          session_id,
+          organization_name: organization,
+          project_name: project,
+        }).unwrap();
 
-      // ✅ Save response in localStorage
-      localStorage.setItem("currentProject", JSON.stringify(response));
+        saveAndNotify(response, "Project created successfully!");
+      }
 
-      // ✅ Show success message
-      setSnackbarMessage("Project created successfully!");
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
+      if (mode === "createExisting") {
+        if (!orgData?.organizations?.length) {
+          return showSnackbar(
+            "No organizations found. Please create one first.",
+            "warning"
+          );
+        }
+        if (!selectedOrgId || !project) {
+          return showSnackbar(
+            "Please select organization and enter project name",
+            "warning"
+          );
+        }
 
-      // Call parent callback
-      onCreate({ project, organization });
+        const orgName = orgData.organizations.find(
+          (o: any) => o.id === selectedOrgId
+        )?.organization_name;
 
-      // Reset form
-      setProject("");
-      setOrganization("");
+        const response: any = await createProjectApi({
+          session_id,
+          organization_name: orgName,
+          project_name: project,
+        }).unwrap();
 
-      console.log("API Response:", response);
+        saveAndNotify(response, "Project created successfully!");
+      }
+
+      if (mode === "selectExisting") {
+        if (!orgData?.organizations?.length) {
+          return showSnackbar(
+            "No organizations found. Please create one first.",
+            "warning"
+          );
+        }
+        if (!selectedOrgId || !selectedProjectId) {
+          return showSnackbar(
+            "Please select organization and project",
+            "warning"
+          );
+        }
+
+        localStorage.setItem(
+          "currentProject",
+          JSON.stringify({
+            organization_id: selectedOrgId,
+            project_id: selectedProjectId,
+          })
+        );
+
+        showSnackbar("Project selected successfully!", "success");
+
+        onCreate({
+          project: projectData?.projects.find(
+            (p: any) => p.id === selectedProjectId
+          )?.project_name,
+          organization: orgData?.organizations.find(
+            (o: any) => o.id === selectedOrgId
+          )?.organization_name,
+        });
+      }
     } catch (err: any) {
-      console.error("API Error:", err);
-
-      // ❌ Show error message
-      setSnackbarMessage(
-        err?.data?.message || "Failed to create project. Please try again."
-      );
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
+      showSnackbar(err?.data?.message || "Operation failed", "error");
     }
+  };
+
+  const saveAndNotify = (response: any, message: string) => {
+    localStorage.setItem(
+      "currentProject",
+      JSON.stringify({
+        organization_id: response.organization_id,
+        project_id: response.project_id,
+      })
+    );
+    showSnackbar(message, "success");
+    onCreate({
+      project,
+      organization: response.organization_name || organization,
+    });
+
+    // Reset form
+    setOrganization("");
+    setProject("");
+    setSelectedOrgId("");
+    setSelectedProjectId("");
+  };
+
+  const showSnackbar = (
+    message: string,
+    severity: "success" | "error" | "info" | "warning"
+  ) => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
   };
 
   return (
     <>
-      <Card
-        sx={{
-          width: 400,
-          borderRadius: 5,
-          background: "linear-gradient(135deg, #F6F8FB 0%, #E6EEF8 100%)",
-          boxShadow: "0px 4px 20px rgba(0,0,0,0.15)",
-          textAlign: "center",
-          p: 3,
-        }}
-      >
+      <Card sx={{ width: 500, borderRadius: 5, p: 3, textAlign: "center" }}>
         <CardContent>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: "bold" }}>
-            Create project
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Project Setup
           </Typography>
 
-          <Typography align="left" sx={{ fontWeight: "600" }}>
-            Project name
-          </Typography>
-          <TextField
-            placeholder="Enter name of your project"
-            variant="outlined"
-            fullWidth
-            size="small"
-            value={project}
-            onChange={(e) => setProject(e.target.value)}
-            sx={{ mb: 3, borderRadius: 5 }}
-          />
+          {/* Mode selector */}
+          <RadioGroup
+            row
+            value={mode}
+            onChange={(e) => {
+              setMode(e.target.value as any);
+              setOrganization("");
+              setProject("");
+              setSelectedOrgId("");
+              setSelectedProjectId("");
+            }}
+            sx={{ mb: 2 }}
+          >
+            <FormControlLabel
+              value="createNew"
+              control={<Radio />}
+              label="Create New"
+            />
+            <FormControlLabel
+              value="createExisting"
+              control={<Radio />}
+              label="Create in Existing"
+            />
+            <FormControlLabel
+              value="selectExisting"
+              control={<Radio />}
+              label="Select Existing"
+            />
+          </RadioGroup>
 
-          <Typography align="left" sx={{ fontWeight: "600" }}>
-            Organization
-          </Typography>
-          <TextField
-            placeholder="Enter name of your organization"
-            variant="outlined"
-            fullWidth
-            size="small"
-            value={organization}
-            onChange={(e) => setOrganization(e.target.value)}
-            sx={{ mb: 3 }}
-          />
+          {/* Create New */}
+          {mode === "createNew" && (
+            <>
+              <TextField
+                placeholder="Organization Name"
+                fullWidth
+                size="small"
+                value={organization}
+                onChange={(e) => setOrganization(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                placeholder="Project Name"
+                fullWidth
+                size="small"
+                value={project}
+                onChange={(e) => setProject(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+            </>
+          )}
+
+          {/* Create in Existing */}
+          {mode === "createExisting" && (
+            <>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Select Organization</InputLabel>
+                <Select
+                  value={selectedOrgId}
+                  onChange={(e) => setSelectedOrgId(e.target.value)}
+                >
+                  <MenuItem value="">-- Select --</MenuItem>
+                  {orgLoading && <MenuItem disabled>Loading...</MenuItem>}
+                  {orgData?.organizations?.map((org: any) => (
+                    <MenuItem key={org.id} value={org.id}>
+                      {org.organization_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                placeholder="Project Name"
+                fullWidth
+                size="small"
+                value={project}
+                onChange={(e) => setProject(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+            </>
+          )}
+
+          {/* Select Existing */}
+          {mode === "selectExisting" && (
+            <>
+              {/* Org dropdown */}
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Select Organization</InputLabel>
+                <Select
+                  value={selectedOrgId}
+                  onChange={(e) => setSelectedOrgId(e.target.value)}
+                >
+                  <MenuItem value="">-- Select --</MenuItem>
+                  {orgLoading && <MenuItem disabled>Loading...</MenuItem>}
+                  {orgData?.organizations?.map((org: any) => (
+                    <MenuItem key={org.id} value={org.id}>
+                      {org.organization_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {/* Project dropdown (auto loads when org selected) */}
+              {selectedOrgId && (
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>Select Project</InputLabel>
+                  <Select
+                    value={selectedProjectId}
+                    onChange={(e) => setSelectedProjectId(e.target.value)}
+                  >
+                    {projectLoading && (
+                      <MenuItem disabled>Loading...</MenuItem>
+                    )}
+                    {projectData?.projects?.map((p: any) => (
+                      <MenuItem key={p.id} value={p.id}>
+                        {p.project_name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+            </>
+          )}
 
           <GradientButton
-            text={isLoading ? "Creating..." : "Create"}
+            text={creating ? <CircularProgress size={20} /> : "Submit"}
             onClick={handleSubmit}
-            disabled={isLoading}
+            disabled={creating}
           />
         </CardContent>
       </Card>
 
-      {/* ✅ Snackbar for feedback */}
       <CustomSnackbar
         open={snackbarOpen}
         message={snackbarMessage}
         severity={snackbarSeverity}
         onClose={() => setSnackbarOpen(false)}
-        autoHideDuration={4000} // optional
       />
     </>
   );
