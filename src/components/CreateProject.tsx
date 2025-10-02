@@ -296,14 +296,28 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
           {mode === "createExisting" && (
             <>
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel id="org-label">Organization</InputLabel>
                 <Select
-                  labelId="org-label"
-                  label="Organization"
                   value={selectedOrgId}
                   onChange={(e) => setSelectedOrgId(e.target.value)}
+                  displayEmpty
+                  sx={{
+                    borderRadius: "10px",
+                    backgroundColor: "#fafafa",
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#d0d0d0",
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "primary.main",
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "primary.main",
+                      borderWidth: 2,
+                    },
+                  }}
                 >
-                  <MenuItem value="">-- Select --</MenuItem>
+                  <MenuItem value="">
+                    <em>Select Organization</em>
+                  </MenuItem>
                   {orgLoading && <MenuItem disabled>Loading...</MenuItem>}
                   {orgData?.organizations?.map((org: any) => (
                     <MenuItem key={org.id} value={org.id}>
@@ -314,7 +328,6 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
               </FormControl>
 
               <TextField
-                label="Project Name"
                 placeholder="Enter Project Name"
                 fullWidth
                 size="small"
@@ -330,14 +343,28 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
             <>
               {/* Org dropdown */}
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel id="select-org-label">Organization</InputLabel>
                 <Select
-                  labelId="select-org-label"
-                  label="Organization"
                   value={selectedOrgId}
                   onChange={(e) => setSelectedOrgId(e.target.value)}
+                  displayEmpty
+                  sx={{
+                    borderRadius: "10px",
+                    backgroundColor: "#fafafa",
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#d0d0d0",
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "primary.main",
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "primary.main",
+                      borderWidth: 2,
+                    },
+                  }}
                 >
-                  <MenuItem value="">-- Select --</MenuItem>
+                  <MenuItem value="">
+                    <em>Select Organization</em>
+                  </MenuItem>
                   {orgLoading && <MenuItem disabled>Loading...</MenuItem>}
                   {orgData?.organizations?.map((org: any) => (
                     <MenuItem key={org.id} value={org.id}>
@@ -350,13 +377,28 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
               {/* Project dropdown */}
               {selectedOrgId && (
                 <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel id="select-project-label">Project</InputLabel>
                   <Select
-                    labelId="select-project-label"
-                    label="Project"
                     value={selectedProjectId}
                     onChange={(e) => setSelectedProjectId(e.target.value)}
+                    displayEmpty
+                    sx={{
+                      borderRadius: "10px",
+                      backgroundColor: "#fafafa",
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "#d0d0d0",
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "primary.main",
+                      },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: "primary.main",
+                        borderWidth: 2,
+                      },
+                    }}
                   >
+                    <MenuItem value="">
+                      <em>Select Project</em>
+                    </MenuItem>
                     {projectLoading && <MenuItem disabled>Loading...</MenuItem>}
                     {projectData?.projects?.map((p: any) => (
                       <MenuItem key={p.id} value={p.id}>
