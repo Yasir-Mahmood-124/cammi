@@ -1,5 +1,5 @@
 "use client";
- 
+
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -25,7 +25,7 @@ import {
   setSubmenuClicked,
   loadSubmenuFromStorage,
 } from "@/redux/services/features/submenuSlice";
- 
+
 import Gtm from "@/views/Gtm";
 import Icp from "@/views/Icp";
 import Kmf from "@/views/kmf";
@@ -33,37 +33,37 @@ import Sr from "@/views/sr";
 import Bs from "@/views/Bs";
 import Linkdin from "@/views/linkedin";
 import EventsComponent from "@/views/events";
- 
+
 const GeneralStragicDocument = ({ onBack }: { onBack: () => void }) => (
   <Box sx={{ p: 0 }}>
     <Gtm />
   </Box>
 );
- 
+
 const IdealCustomerProfile = ({ onBack }: { onBack: () => void }) => (
   <Box sx={{ p: 0 }}>
     <Icp />
   </Box>
 );
- 
+
 const StrategicRoadmap = ({ onBack }: { onBack: () => void }) => (
   <Box sx={{ p: 0 }}>
     <Sr />
   </Box>
 );
- 
+
 const MessagingFramework = ({ onBack }: { onBack: () => void }) => (
   <Box sx={{ p: 0 }}>
     <Kmf />
   </Box>
 );
- 
+
 const BrandStartegy = ({ onBack }: { onBack: () => void }) => (
   <Box sx={{ p: 0 }}>
     <Bs />
   </Box>
 );
- 
+
 const LinkedIn = ({ onBack }: { onBack: () => void }) => (
   <Box sx={{ p: 0 }}>
     <Linkdin />
@@ -79,25 +79,25 @@ const Budget = ({ onBack }: { onBack: () => void }) => (
     <Typography variant="h4">Budget</Typography>
   </Box>
 );
- 
+
 const DashboardWelcome: React.FC = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
- 
+
   const submenuClicked = useSelector(
     (state: RootState) => state.submenu.clicked
   );
- 
+
   const [anchorEls, setAnchorEls] = useState<
     Record<string, HTMLElement | null>
   >({});
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [openCreateProject, setOpenCreateProject] = useState(false);
- 
+
   useEffect(() => {
     dispatch(loadSubmenuFromStorage());
   }, [dispatch]);
- 
+
   const sidebarData = [
     {
       label: "Clarify",
@@ -127,7 +127,7 @@ const DashboardWelcome: React.FC = () => {
       key: "iterate",
     },
   ];
- 
+
   const handleClick = (key: string, event: React.MouseEvent<HTMLElement>) => {
     const storedProject = localStorage.getItem("currentProject");
     if (!storedProject) {
@@ -136,11 +136,11 @@ const DashboardWelcome: React.FC = () => {
     }
     setAnchorEls((prev) => ({ ...prev, [key]: event.currentTarget }));
   };
- 
+
   const handleClose = (key: string) => {
     setAnchorEls((prev) => ({ ...prev, [key]: null }));
   };
- 
+
   const renderActiveComponent = () => {
     switch (submenuClicked) {
       case "gtm":
@@ -159,7 +159,7 @@ const DashboardWelcome: React.FC = () => {
         return (
           <StrategicRoadmap onBack={() => dispatch(setSubmenuClicked(null))} />
         );
- 
+
       case "kmf":
         return (
           <MessagingFramework
@@ -170,10 +170,10 @@ const DashboardWelcome: React.FC = () => {
         return (
           <BrandStartegy onBack={() => dispatch(setSubmenuClicked(null))} />
         );
- 
+
       case "linkedin":
         return <LinkedIn onBack={() => dispatch(setSubmenuClicked(null))} />;
- 
+
       case "events":
         return <Events onBack={() => dispatch(setSubmenuClicked(null))} />;
       case "budget":
@@ -182,15 +182,15 @@ const DashboardWelcome: React.FC = () => {
         return null;
     }
   };
- 
+
   if (submenuClicked) {
     return (
-      <Box sx={{ width: "100%", height: "100vh", bgcolor: "#fff" }}>
+      <Box sx={{ width: "100%", maxWidth: "95%", marginLeft: "10px", height: "100vh", bgcolor: "#fff" }}>
         {renderActiveComponent()}
       </Box>
     );
   }
- 
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box width="100%" sx={{ px: 5 }}>
@@ -218,7 +218,7 @@ const DashboardWelcome: React.FC = () => {
             }}
           />
         </Box>
- 
+
         <Paper
           elevation={0}
           sx={{
@@ -236,7 +236,7 @@ const DashboardWelcome: React.FC = () => {
           <Typography fontWeight="bold" fontSize="15px" color="black" mb={3}>
             Your AI-powered marketing BFF
           </Typography>
- 
+
           <Box display="flex" gap={2} justifyContent="flex-start">
             <Button
               variant="contained"
@@ -256,7 +256,7 @@ const DashboardWelcome: React.FC = () => {
             >
               Create
             </Button>
- 
+
             <Button
               variant="outlined"
               size="large"
@@ -269,11 +269,11 @@ const DashboardWelcome: React.FC = () => {
                 py: 0.2,
               }}
             >
-              Select 
+              Select
             </Button>
           </Box>
         </Paper>
- 
+
         <Box
           mt={4}
           display="flex"
@@ -378,7 +378,7 @@ const DashboardWelcome: React.FC = () => {
           ))}
         </Box>
       </Box>
- 
+
       <Dialog
         open={openCreateProject}
         onClose={() => setOpenCreateProject(false)}
@@ -391,6 +391,13 @@ const DashboardWelcome: React.FC = () => {
         <CreateProject
           onCreate={(data) => {
             console.log("New project created:", data);
+
+            // save to localStorage
+            localStorage.setItem("selectedData", JSON.stringify(data));
+            window.dispatchEvent(new Event("selectedDataChanged"));
+
+
+
             setSelectedProject(data.project);
             setOpenCreateProject(false);
           }}
@@ -399,5 +406,5 @@ const DashboardWelcome: React.FC = () => {
     </Container>
   );
 };
- 
+
 export default DashboardWelcome;

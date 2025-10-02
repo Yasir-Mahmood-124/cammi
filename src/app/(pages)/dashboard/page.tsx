@@ -86,6 +86,11 @@ export default function DashboardPage() {
   const router = useRouter();
   const [logoutApi] = useLogoutMutation();
 
+  const [selectedData, setSelectedData] = useState<{
+    organization: string;
+    project: string;
+  } | null>(null);
+
   const submenuClicked = useSelector(
     (state: RootState) => state.submenu.clicked
   );
@@ -93,6 +98,21 @@ export default function DashboardPage() {
   useEffect(() => {
     dispatch(loadSubmenuFromStorage());
   }, [dispatch]);
+
+  //Load OrganizationName and ProjectName from the localStorage as well.
+  useEffect(() => {
+    const updateData = () => {
+      const storedData = localStorage.getItem("selectedData");
+      setSelectedData(storedData ? JSON.parse(storedData) : null);
+    };
+
+    updateData(); // run initially
+
+    window.addEventListener("selectedDataChanged", updateData);
+    return () => {
+      window.removeEventListener("selectedDataChanged", updateData);
+    };
+  }, []);
 
   const handleLogout = async () => {
     setShowLoader(true);
@@ -177,6 +197,9 @@ export default function DashboardPage() {
               // 1️⃣ Remove from localStorage
               localStorage.removeItem("currentProject");
               localStorage.removeItem("subMenuclicked");
+              localStorage.removeItem("selectedData");
+
+              window.dispatchEvent(new Event("selectedDataChanged"));
 
               // 2️⃣ Clear Redux state
               dispatch(clearSubmenu());
@@ -226,6 +249,42 @@ export default function DashboardPage() {
         }}
       >
         <List>
+          {/* 🔥 Show Org/Project above Smart Scheduler */}
+          {selectedData && (
+            <Box
+              sx={{
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+                p: 2,
+                mb: 2,
+                backgroundColor: "#fff",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+              }}
+            >
+              <Box
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: "#666",
+                  mb: 0.5,
+                }}
+              >
+                Organization
+              </Box>
+              <Box sx={{ fontSize: "14px", fontWeight: 600, color: "#222" }}>
+                {selectedData.organization}
+              </Box>
+
+              <Box
+                sx={{ fontSize: "12px", fontWeight: 500, color: "#666", mt: 1 }}
+              >
+                Project
+              </Box>
+              <Box sx={{ fontSize: "14px", fontWeight: 600, color: "#222" }}>
+                {selectedData.project}
+              </Box>
+            </Box>
+          )}
           {sidebarData
             .filter((category) => {
               if (

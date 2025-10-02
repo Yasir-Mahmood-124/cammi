@@ -78,7 +78,12 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
           project_name: project,
         }).unwrap();
 
-        saveAndNotify(response, "Project created successfully!");
+        saveAndNotify(
+          response,
+          "Project created successfully!",
+          organization,
+          project
+        );
       }
 
       if (mode === "createExisting") {
@@ -105,7 +110,12 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
           project_name: project,
         }).unwrap();
 
-        saveAndNotify(response, "Project created successfully!");
+        saveAndNotify(
+          response,
+          "Project created successfully!",
+          orgName,
+          project
+        );
       }
 
       if (mode === "selectExisting") {
@@ -122,6 +132,14 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
           );
         }
 
+        const orgName = orgData.organizations.find(
+          (o: any) => o.id === selectedOrgId
+        )?.organization_name;
+
+        const projectName = projectData?.projects.find(
+          (p: any) => p.id === selectedProjectId
+        )?.project_name;
+
         localStorage.setItem(
           "currentProject",
           JSON.stringify({
@@ -133,12 +151,8 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
         showSnackbar("Project selected successfully!", "success");
 
         onCreate({
-          project: projectData?.projects.find(
-            (p: any) => p.id === selectedProjectId
-          )?.project_name,
-          organization: orgData?.organizations.find(
-            (o: any) => o.id === selectedOrgId
-          )?.organization_name,
+          organization: orgName,
+          project: projectName,
         });
       }
     } catch (err: any) {
@@ -146,7 +160,12 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
     }
   };
 
-  const saveAndNotify = (response: any, message: string) => {
+  const saveAndNotify = (
+    response: any,
+    message: string,
+    orgName: string,
+    projectName: string
+  ) => {
     localStorage.setItem(
       "currentProject",
       JSON.stringify({
@@ -155,9 +174,11 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
       })
     );
     showSnackbar(message, "success");
+
+    // Send both names consistently
     onCreate({
-      project,
-      organization: response.organization_name || organization,
+      project: projectName,
+      organization: orgName,
     });
 
     // Reset form
@@ -185,7 +206,7 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
           </Typography>
 
           {/* Mode selector */}
-          <FormControl component="fieldset" sx={{ mb: 2 }}>
+          <FormControl component="fieldset" sx={{ mb: 2, width: "100%" }}>
             <RadioGroup
               row
               value={mode}
@@ -196,20 +217,54 @@ export default function CreateProject({ onCreate }: CreateProjectProps) {
                 setSelectedOrgId("");
                 setSelectedProjectId("");
               }}
+              sx={{
+                justifyContent: "flex-start",
+                gap: 4,
+                flexWrap: "nowrap",
+                marginTop: "16px",
+                marginBottom: "16px",
+              }} // ✅ keep in one line with spacing
             >
               <FormControlLabel
                 value="createNew"
-                control={<Radio color="primary" />}
+                control={
+                  <Radio
+                    sx={{
+                      color: "grey.500", // unchecked color
+                      "&.Mui-checked": {
+                        color: "primary.main", // checked = primary
+                      },
+                    }}
+                  />
+                }
                 label="Create New"
               />
               <FormControlLabel
                 value="createExisting"
-                control={<Radio color="primary" />}
+                control={
+                  <Radio
+                    sx={{
+                      color: "grey.500",
+                      "&.Mui-checked": {
+                        color: "primary.main",
+                      },
+                    }}
+                  />
+                }
                 label="Create in Existing"
               />
               <FormControlLabel
                 value="selectExisting"
-                control={<Radio color="primary" />}
+                control={
+                  <Radio
+                    sx={{
+                      color: "grey.500",
+                      "&.Mui-checked": {
+                        color: "primary.main",
+                      },
+                    }}
+                  />
+                }
                 label="Select Existing"
               />
             </RadioGroup>

@@ -63,6 +63,7 @@ const Login = () => {
       localStorage.removeItem("currentProject");
       localStorage.removeItem("subMenuclicked");
       localStorage.removeItem("linkedin_sub");
+      localStorage.removeItem("selectedData");
 
       // ✅ Optionally reset Redux state too if you store them there
       // dispatch(clearSubmenu());
