@@ -27,9 +27,14 @@ const Register = () => {
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error" | "info" | "warning">("info");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<
+    "success" | "error" | "info" | "warning"
+  >("info");
 
-  const handleSnackbar = (message: string, severity: "success" | "error" | "info" | "warning") => {
+  const handleSnackbar = (
+    message: string,
+    severity: "success" | "error" | "info" | "warning"
+  ) => {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
     setSnackbarOpen(true);
@@ -38,14 +43,33 @@ const Register = () => {
   const [register, { isLoading }] = useRegisterMutation();
 
   const handleSignUp = async () => {
-    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password.trim()) {
+    if (
+      !firstName.trim() ||
+      !lastName.trim() ||
+      !email.trim() ||
+      !password.trim()
+    ) {
       handleSnackbar("Please fill all the fields", "warning");
+      return;
+    }
+
+    // Password validation
+    const passwordRegex =
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=<>?{}[\]~]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      handleSnackbar(
+        "Password must be at least 8 characters long, contain one uppercase letter, one number, and one special character.",
+        "error"
+      );
       return;
     }
 
     try {
       await register({ firstName, lastName, email, password }).unwrap();
-      handleSnackbar("Registration successful! Please verify your email.", "success");
+      handleSnackbar(
+        "Registration successful! Please verify your email.",
+        "success"
+      );
       setShowVerify(true); // show verification screen
     } catch (err: any) {
       handleSnackbar(err?.data?.message || "Registration failed", "error");
@@ -110,7 +134,10 @@ const Register = () => {
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               InputProps={{
-                sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } },
+                sx: {
+                  borderRadius: 2,
+                  "& .MuiInputBase-input": { padding: "10px" },
+                },
               }}
             />
           </Box>
@@ -127,7 +154,10 @@ const Register = () => {
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               InputProps={{
-                sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } },
+                sx: {
+                  borderRadius: 2,
+                  "& .MuiInputBase-input": { padding: "10px" },
+                },
               }}
             />
           </Box>
@@ -144,7 +174,10 @@ const Register = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               InputProps={{
-                sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } },
+                sx: {
+                  borderRadius: 2,
+                  "& .MuiInputBase-input": { padding: "10px" },
+                },
               }}
             />
           </Box>
@@ -162,7 +195,10 @@ const Register = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               InputProps={{
-                sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } },
+                sx: {
+                  borderRadius: 2,
+                  "& .MuiInputBase-input": { padding: "10px" },
+                },
               }}
             />
           </Box>
@@ -178,13 +214,24 @@ const Register = () => {
           />
         </Box>
 
-        <Typography variant="body1" color="text.primary" sx={{ mt: 2, textAlign: "center" }}>
+        <Typography
+          variant="body1"
+          color="text.primary"
+          sx={{ mt: 2, textAlign: "center" }}
+        >
           Already registered?{" "}
-          <Link href="/login" style={{ color: "black", textDecoration: "none" }}>
+          <Link
+            href="/login"
+            style={{ color: "black", textDecoration: "none" }}
+          >
             <strong
               style={{ color: "black", cursor: "pointer" }}
-              onMouseOver={(e) => ((e.target as HTMLElement).style.textDecoration = "underline")}
-              onMouseOut={(e) => ((e.target as HTMLElement).style.textDecoration = "none")}
+              onMouseOver={(e) =>
+                ((e.target as HTMLElement).style.textDecoration = "underline")
+              }
+              onMouseOut={(e) =>
+                ((e.target as HTMLElement).style.textDecoration = "none")
+              }
             >
               Log In
             </strong>

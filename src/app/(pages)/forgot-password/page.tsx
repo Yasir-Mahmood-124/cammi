@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Box, Typography, TextField, Stack, Paper, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  Stack,
+  Paper,
+  CircularProgress,
+} from "@mui/material";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -10,7 +17,11 @@ import PanelImg from "@/assests/images/Panel.png";
 import GradientButton from "@/components/common/GradientButton";
 import CustomSnackbar from "@/components/common/CustomSnackbar";
 
-import { useForgotPasswordMutation, useVerifyCodeMutation, useResetPasswordMutation } from "@/redux/services/auth/authApi";
+import {
+  useForgotPasswordMutation,
+  useVerifyCodeMutation,
+  useResetPasswordMutation,
+} from "@/redux/services/auth/authApi";
 
 const ResetPassword = () => {
   const router = useRouter();
@@ -21,16 +32,23 @@ const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [forgotPassword, { isLoading: isSendingCode }] = useForgotPasswordMutation();
+  const [forgotPassword, { isLoading: isSendingCode }] =
+    useForgotPasswordMutation();
   const [verifyCode, { isLoading: isVerifying }] = useVerifyCodeMutation();
-  const [resetPassword, { isLoading: isResetting }] = useResetPasswordMutation();
+  const [resetPassword, { isLoading: isResetting }] =
+    useResetPasswordMutation();
 
   // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error" | "info" | "warning">("info");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<
+    "success" | "error" | "info" | "warning"
+  >("info");
 
-  const handleSnackbar = (message: string, severity: "success" | "error" | "info" | "warning") => {
+  const handleSnackbar = (
+    message: string,
+    severity: "success" | "error" | "info" | "warning"
+  ) => {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
     setSnackbarOpen(true);
@@ -46,7 +64,10 @@ const ResetPassword = () => {
       handleSnackbar(response.message, "success");
       setStep(2); // move to verify code step
     } catch (err: any) {
-      handleSnackbar(err?.data?.message || "Failed to send reset code", "error");
+      handleSnackbar(
+        err?.data?.message || "Failed to send reset code",
+        "error"
+      );
     }
   };
 
@@ -56,7 +77,10 @@ const ResetPassword = () => {
       return;
     }
     try {
-      const response = await verifyCode({ email, code: verificationCode }).unwrap();
+      const response = await verifyCode({
+        email,
+        code: verificationCode,
+      }).unwrap();
       handleSnackbar(response.message, "success");
       setStep(3); // move to reset password step
     } catch (err: any) {
@@ -69,12 +93,29 @@ const ResetPassword = () => {
       handleSnackbar("Please fill all fields", "warning");
       return;
     }
+
+    // Password regex validation
+    const passwordRegex =
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=<>?{}[\]~]).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      handleSnackbar(
+        "Password must be at least 8 characters long, contain one uppercase letter, one number, and one special character.",
+        "error"
+      );
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       handleSnackbar("Passwords do not match", "warning");
       return;
     }
+
     try {
-      const response = await resetPassword({ email, newPassword, confirmPassword }).unwrap();
+      const response = await resetPassword({
+        email,
+        newPassword,
+        confirmPassword,
+      }).unwrap();
       handleSnackbar(response.message, "success");
 
       // Clear fields
@@ -120,7 +161,11 @@ const ResetPassword = () => {
         }}
       >
         <Typography variant="h1" color="text.primary" gutterBottom>
-          {step === 1 ? "Forgot Password" : step === 2 ? "Verify Code" : "Reset Password"}
+          {step === 1
+            ? "Forgot Password"
+            : step === 2
+            ? "Verify Code"
+            : "Reset Password"}
         </Typography>
 
         <Stack spacing={2} sx={{ mt: 3, alignItems: "center" }}>
@@ -132,11 +177,22 @@ const ResetPassword = () => {
                 variant="outlined"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                InputProps={{ sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } } }}
+                InputProps={{
+                  sx: {
+                    borderRadius: 2,
+                    "& .MuiInputBase-input": { padding: "10px" },
+                  },
+                }}
               />
               <Box sx={{ mt: 3 }}>
                 <GradientButton
-                  text={isSendingCode ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Send Reset Code"}
+                  text={
+                    isSendingCode ? (
+                      <CircularProgress size={20} sx={{ color: "#fff" }} />
+                    ) : (
+                      "Send Reset Code"
+                    )
+                  }
                   onClick={handleSendResetCode}
                   width="100%"
                   fontSize="1rem"
@@ -154,11 +210,22 @@ const ResetPassword = () => {
                 variant="outlined"
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
-                InputProps={{ sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } } }}
+                InputProps={{
+                  sx: {
+                    borderRadius: 2,
+                    "& .MuiInputBase-input": { padding: "10px" },
+                  },
+                }}
               />
               <Box sx={{ mt: 3 }}>
                 <GradientButton
-                  text={isVerifying ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Verify Code"}
+                  text={
+                    isVerifying ? (
+                      <CircularProgress size={20} sx={{ color: "#fff" }} />
+                    ) : (
+                      "Verify Code"
+                    )
+                  }
                   onClick={handleVerifyCode}
                   width="100%"
                   fontSize="1rem"
@@ -181,7 +248,12 @@ const ResetPassword = () => {
                   variant="outlined"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  InputProps={{ sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } } }}
+                  InputProps={{
+                    sx: {
+                      borderRadius: 2,
+                      "& .MuiInputBase-input": { padding: "10px" },
+                    },
+                  }}
                 />
               </Box>
 
@@ -196,13 +268,24 @@ const ResetPassword = () => {
                   variant="outlined"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  InputProps={{ sx: { borderRadius: 2, "& .MuiInputBase-input": { padding: "10px" } } }}
+                  InputProps={{
+                    sx: {
+                      borderRadius: 2,
+                      "& .MuiInputBase-input": { padding: "10px" },
+                    },
+                  }}
                 />
               </Box>
 
               <Box sx={{ mt: 3 }}>
                 <GradientButton
-                  text={isResetting ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Reset Password"}
+                  text={
+                    isResetting ? (
+                      <CircularProgress size={20} sx={{ color: "#fff" }} />
+                    ) : (
+                      "Reset Password"
+                    )
+                  }
                   onClick={handleResetPassword}
                   width="100%"
                   fontSize="1rem"
@@ -213,13 +296,24 @@ const ResetPassword = () => {
           )}
         </Stack>
 
-        <Typography variant="body1" color="text.primary" sx={{ mt: 2, textAlign: "center" }}>
+        <Typography
+          variant="body1"
+          color="text.primary"
+          sx={{ mt: 2, textAlign: "center" }}
+        >
           Remembered your password?{" "}
-          <Link href="/login" style={{ color: "black", textDecoration: "none" }}>
+          <Link
+            href="/login"
+            style={{ color: "black", textDecoration: "none" }}
+          >
             <strong
               style={{ color: "black", cursor: "pointer" }}
-              onMouseOver={(e) => ((e.target as HTMLElement).style.textDecoration = "underline")}
-              onMouseOut={(e) => ((e.target as HTMLElement).style.textDecoration = "none")}
+              onMouseOver={(e) =>
+                ((e.target as HTMLElement).style.textDecoration = "underline")
+              }
+              onMouseOut={(e) =>
+                ((e.target as HTMLElement).style.textDecoration = "none")
+              }
             >
               Log In
             </strong>
