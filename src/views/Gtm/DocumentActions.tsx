@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -12,6 +12,7 @@ import {
 import * as mammoth from "mammoth";
 import GradientButton from "@/components/common/GradientButton";
 import { useGetDocxFileMutation } from "@/redux/services/common/downloadApi";
+import EditHeadingDialog from "./EditHeadingDialog";
 
 const DocumentActions: React.FC = () => {
   const theme = useTheme();
@@ -21,19 +22,49 @@ const DocumentActions: React.FC = () => {
   const [docContent, setDocContent] = useState("");
   const [viewLoading, setViewLoading] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  // ✅ Prepare headers here (from localStorage + cookies)
+  const [headers, setHeaders] = useState<{
+    project_id: string;
+    session_id: string;
+    document_type: string;
+  } | null>(null);
+
+  useEffect(() => {
+    try {
+      // Get project_id from localStorage
+      const projectData = localStorage.getItem("currentProject");
+      const parsedProject = projectData ? JSON.parse(projectData) : null;
+      const project_id = parsedProject?.project_id || "";
+
+      // Get session_id (token) from cookies
+      const match = document.cookie.match(new RegExp("(^| )token=([^;]+)"));
+      const session_id = match ? decodeURIComponent(match[2]) : "";
+
+      // Hardcode document type
+      const document_type = "gtm";
+
+      if (project_id && session_id) {
+        setHeaders({ project_id, session_id, document_type });
+      } else {
+        console.warn("⚠️ Missing project_id or session_id.");
+      }
+    } catch (err) {
+      console.error("Error reading headers:", err);
+    }
+  }, []);
 
   // 🔹 Download as DOCX
   const handleDownload = async () => {
     try {
       const response = await getDocxFile().unwrap();
-
       console.log("📥 Full API Response:", response);
+
       const byteCharacters = atob(response.docxBase64);
       const byteArrays = [];
-
       for (let i = 0; i < byteCharacters.length; i++) {
         byteArrays.push(byteCharacters.charCodeAt(i));
-        
       }
 
       const blob = new Blob([new Uint8Array(byteArrays)], {
@@ -61,7 +92,6 @@ const DocumentActions: React.FC = () => {
 
     try {
       const response = await getDocxFile().unwrap();
-
       const arrayBuffer = Uint8Array.from(atob(response.docxBase64), (c) =>
         c.charCodeAt(0)
       ).buffer;
@@ -75,12 +105,7 @@ const DocumentActions: React.FC = () => {
     }
   };
 
-// 🔹 Edit placeholder
-//   const handleEdit = () => {
-//     console.log("Edit button clicked – hook into editor here.");
-//   };
-
-  // 🔹 Define styles for templates
+  // 🔹 Define template styles
   const templateStyles: Record<string, any> = {
     template1: {
       backgroundColor: theme.palette.background.paper,
@@ -105,7 +130,7 @@ const DocumentActions: React.FC = () => {
 
   return (
     <Box sx={{ mt: 3 }}>
-      {/* Template Selection as Cards */}
+      {/* Template Selection */}
       <Box
         sx={{
           display: "flex",
@@ -125,7 +150,9 @@ const DocumentActions: React.FC = () => {
               cursor: "pointer",
               borderRadius: 2,
               boxShadow:
-                selectedTheme === key ? `0 0 10px ${theme.palette.primary.main}` : 2,
+                selectedTheme === key
+                  ? `0 0 10px ${theme.palette.primary.main}`
+                  : 2,
               transition: "0.3s",
               "&:hover": {
                 transform: "scale(1.05)",
@@ -177,7 +204,7 @@ const DocumentActions: React.FC = () => {
         )}
       </Box>
 
-      {/* Action Buttons */}
+      {/* Buttons */}
       <Box
         sx={{
           display: "flex",
@@ -187,19 +214,35 @@ const DocumentActions: React.FC = () => {
         }}
       >
         <GradientButton
+          text="Edit"
+          width="150px"
+          onClick={() => setEditDialogOpen(true)}
+          disabled={!headers}
+        />
+
+        <GradientButton
           text={isLoading ? "Downloading..." : "Download"}
           width="150px"
           onClick={handleDownload}
           disabled={isLoading}
         />
-
-        {/* <GradientButton text="Edit" width="150px" onClick={handleEdit} /> */}
       </Box>
 
       {isError && (
         <Typography sx={{ color: "red", mt: 2, textAlign: "center" }}>
           ❌ Error: {(error as any)?.data?.error || "Unknown error"}
         </Typography>
+      )}
+
+      {/* Edit Dialog */}
+      {headers && (
+        <EditHeadingDialog
+          open={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          projectId={headers.project_id}
+          sessionId={headers.session_id}
+          documentType={headers.document_type}
+        />
       )}
     </Box>
   );

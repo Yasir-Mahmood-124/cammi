@@ -17,6 +17,7 @@ import { editQuestionApi } from "./services/common/editQuestion";
 import authReducer from "./services/auth/authSlice";
 import { fetchSchedulePostApi } from "./services/linkedin/fetchSchedulePostApi";
 import { projectsApi } from "./services/projects/projectsApi";
+import { editHeadingWebsocketApi } from "./services/common/editHeadingWebsocket";
 
 
 export const store = configureStore({
@@ -39,6 +40,7 @@ export const store = configureStore({
     [editQuestionApi.reducerPath]: editQuestionApi.reducer,
     [fetchSchedulePostApi.reducerPath]: fetchSchedulePostApi.reducer,
     [projectsApi.reducerPath]: projectsApi.reducer,
+    [editHeadingWebsocketApi.reducerPath]: editHeadingWebsocketApi.reducer,
   },
 
   middleware: (getDefaultMiddleware) =>
@@ -60,6 +62,7 @@ export const store = configureStore({
         editQuestionApi.middleware,
         fetchSchedulePostApi.middleware,
         projectsApi.middleware,
+        editHeadingWebsocketApi.middleware
       ),
 });
 

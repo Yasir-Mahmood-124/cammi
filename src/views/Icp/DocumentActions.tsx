@@ -8,11 +8,13 @@ import {
   Card,
   CardContent,
   useTheme,
+  Button,
 } from "@mui/material";
 import * as mammoth from "mammoth";
 import GradientButton from "@/components/common/GradientButton";
 import { useGetDocxFileMutation } from "@/redux/services/document/downloadApi";
 import Cookies from "js-cookie";
+import EditHeadingDialog from "./EditHeadingDialog"; // ✅ New Component
 
 interface DocumentActionsProps {
   document_type: string; // required prop
@@ -25,17 +27,24 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ document_type }) => {
   const [docContent, setDocContent] = useState("");
   const [viewLoading, setViewLoading] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
+  const [openEditDialog, setOpenEditDialog] = useState(false); // ✅ For popup
 
   // Get session_id and project_id
   const session_id = Cookies.get("token") || "";
   const storedProject =
-    typeof window !== "undefined" ? localStorage.getItem("currentProject") : null;
+    typeof window !== "undefined"
+      ? localStorage.getItem("currentProject")
+      : null;
   const project_id = storedProject ? JSON.parse(storedProject).project_id : "";
 
   // 🔹 Download as DOCX
   const handleDownload = async () => {
     try {
-      const response = await getDocxFile({ session_id, document_type, project_id }).unwrap();
+      const response = await getDocxFile({
+        session_id,
+        document_type,
+        project_id,
+      }).unwrap();
 
       const byteCharacters = atob(response.docxBase64);
       const byteArrays = [];
@@ -68,7 +77,11 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ document_type }) => {
     setViewLoading(true);
 
     try {
-      const response = await getDocxFile({ session_id, document_type, project_id }).unwrap();
+      const response = await getDocxFile({
+        session_id,
+        document_type,
+        project_id,
+      }).unwrap();
 
       const arrayBuffer = Uint8Array.from(atob(response.docxBase64), (c) =>
         c.charCodeAt(0)
@@ -128,7 +141,9 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ document_type }) => {
               cursor: "pointer",
               borderRadius: 2,
               boxShadow:
-                selectedTheme === key ? `0 0 10px ${theme.palette.primary.main}` : 2,
+                selectedTheme === key
+                  ? `0 0 10px ${theme.palette.primary.main}`
+                  : 2,
               transition: "0.3s",
               "&:hover": {
                 transform: "scale(1.05)",
@@ -195,13 +210,27 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({ document_type }) => {
           onClick={handleDownload}
           disabled={isLoading}
         />
+
+        <GradientButton
+          text="Edit"
+          width="150px"
+          onClick={() => setOpenEditDialog(true)} // ✅ open popup
+        />
       </Box>
 
+      {/* Error Message */}
       {isError && (
         <Typography sx={{ color: "red", mt: 2, textAlign: "center" }}>
           ❌ Error: {(error as any)?.data?.error || "Unknown error"}
         </Typography>
       )}
+
+      {/* ✅ Edit Popup Component */}
+      <EditHeadingDialog
+        open={openEditDialog}
+        onClose={() => setOpenEditDialog(false)}
+        document_type={document_type}
+      />
     </Box>
   );
 };
