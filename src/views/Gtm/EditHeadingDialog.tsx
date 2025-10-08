@@ -130,14 +130,14 @@ const EditHeadingDialog: React.FC<EditHeadingDialogProps> = ({
     }
   };
 
-    // ✅ Reset fields whenever the dialog closes
-    useEffect(() => {
-      if (!open) {
-        setMainHeading("");
-        setSubHeading("");
-        setPrompt("");
-      }
-    }, [open]);
+  // ✅ Reset fields whenever the dialog closes
+  useEffect(() => {
+    if (!open) {
+      setMainHeading("");
+      setSubHeading("");
+      setPrompt("");
+    }
+  }, [open]);
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
 
@@ -156,18 +156,29 @@ const EditHeadingDialog: React.FC<EditHeadingDialogProps> = ({
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}
         >
-          {/* Main Heading Dropdown */}
-          <FormControl fullWidth>
-            <InputLabel>Main Heading</InputLabel>
+          {/* Main Heading */}
+          <FormControl fullWidth sx={{ mb: 2 }}>
             <Select
+              displayEmpty
               value={mainHeading}
-              label="Main Heading"
               onChange={(e) => {
                 setMainHeading(e.target.value);
                 setSubHeading("");
               }}
               disabled={loading}
+              sx={{
+                borderRadius: 2,
+                "& .MuiSelect-outlined": {
+                  padding: "10px 14px",
+                },
+                "& fieldset": { borderColor: "#ccc" },
+                "&:hover fieldset": { borderColor: "primary.main" },
+                "&.Mui-focused fieldset": { borderColor: "primary.main" },
+              }}
             >
+              <MenuItem value="" disabled>
+                Select Main Heading
+              </MenuItem>
               {Object.keys(headingData).map((heading) => (
                 <MenuItem key={heading} value={heading}>
                   {heading}
@@ -176,14 +187,23 @@ const EditHeadingDialog: React.FC<EditHeadingDialogProps> = ({
             </Select>
           </FormControl>
 
-          {/* Sub Heading Dropdown */}
-          <FormControl fullWidth disabled={!mainHeading || loading}>
-            <InputLabel>Sub Heading</InputLabel>
+          {/* Sub Heading */}
+          <FormControl fullWidth sx={{ mb: 2 }}>
             <Select
+              displayEmpty
               value={subHeading}
-              label="Sub Heading"
               onChange={(e) => setSubHeading(e.target.value)}
+              disabled={!mainHeading || loading}
+              sx={{
+                borderRadius: 2,
+                "& fieldset": { borderColor: "#ccc" },
+                "&:hover fieldset": { borderColor: "primary.main" },
+                "&.Mui-focused fieldset": { borderColor: "primary.main" },
+              }}
             >
+              <MenuItem value="" disabled>
+                Select Sub Heading
+              </MenuItem>
               {mainHeading &&
                 headingData[mainHeading]?.map((sub) => (
                   <MenuItem key={sub} value={sub}>
@@ -193,15 +213,25 @@ const EditHeadingDialog: React.FC<EditHeadingDialogProps> = ({
             </Select>
           </FormControl>
 
-          {/* Prompt Input */}
+          {/* Prompt */}
           <TextField
-            label="Prompt"
+            placeholder="Enter your prompt..."
             multiline
             rows={3}
             fullWidth
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             disabled={loading}
+            variant="outlined"
+            sx={{
+              borderRadius: 2,
+              "& fieldset": { borderColor: "#ccc" },
+              "&:hover fieldset": { borderColor: "primary.main" },
+              "&.Mui-focused fieldset": { borderColor: "primary.main" },
+              "& .MuiInputBase-input": {
+                padding: "12px",
+              },
+            }}
           />
         </DialogContent>
 

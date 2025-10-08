@@ -101,39 +101,62 @@ const UploadDocument: React.FC<UploadDocumentProps> = ({
     }
   };
 
-  const handleUpload = () => {
-    if (!fileText) return;
+const handleUpload = () => {
+  if (!fileText) return;
 
-    const session_id = Cookies.get("token");
-    const storedProject =
-      typeof window !== "undefined"
-        ? localStorage.getItem("currentProject")
-        : null;
-    const project = storedProject ? JSON.parse(storedProject) : null;
-    const project_id = project?.project_id;
+  const session_id = Cookies.get("token");
+  const storedProject =
+    typeof window !== "undefined"
+      ? localStorage.getItem("currentProject")
+      : null;
+  const project = storedProject ? JSON.parse(storedProject) : null;
+  const project_id = project?.project_id;
 
-    if (!session_id || !project_id) {
-      setSnackbar({
-        open: true,
-        message: "Missing session_id or project_id",
-        severity: "error",
-      });
-      return;
+  if (!session_id || !project_id) {
+    setSnackbar({
+      open: true,
+      message: "Missing session_id or project_id",
+      severity: "error",
+    });
+    return;
+  }
+
+  // ✅ Step 1: Convert to bytes to measure size
+  const encoder = new TextEncoder();
+  const encoded = encoder.encode(fileText);
+
+  const MAX_SIZE = 90 * 1024; // keep a safe margin (120 KB)
+  let safeText = fileText;
+
+  // ✅ Step 2: Truncate if necessary
+  if (encoded.length > MAX_SIZE) {
+    console.warn(
+      `File text is too large (${encoded.length} bytes). Truncating to ${MAX_SIZE} bytes.`
+    );
+
+    // find the largest substring within limit
+    let sliceLength = fileText.length;
+    while (encoder.encode(fileText.slice(0, sliceLength)).length > MAX_SIZE) {
+      sliceLength -= 1000; // reduce in chunks for performance
     }
+    safeText = fileText.slice(0, sliceLength);
+  }
 
-    const payload = {
-      action: "startProcessing",
-      session_id,
-      project_id,
-      text: fileText,
-      document_type,
-    };
-
-    console.log("Uploading document...", payload);
-
-    setIsUploading(true);
-    wsClient.send(payload);
+  const payload = {
+    action: "startProcessing",
+    session_id,
+    project_id,
+    document_type,
+    text: safeText,
   };
+
+  console.log(
+    `Uploading document (size: ${encoder.encode(safeText).length} bytes)...`
+  );
+
+  setIsUploading(true);
+  wsClient.send(payload);
+};
 
   return (
     <>
