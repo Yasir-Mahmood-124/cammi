@@ -157,6 +157,11 @@ const Login = () => {
               variant="outlined"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleLogin();
+                }
+              }}
               InputProps={{
                 sx: {
                   borderRadius: 2,
